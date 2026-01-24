@@ -1,0 +1,928 @@
+@{
+    ViewData["Title"] = "Subscribe – EduTrack";
+    var plan = Context.Request.Query["plan"].ToString();
+    if (string.IsNullOrEmpty(plan)) { plan = "0"; }
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.23.0/sweetalert2.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --primary-dark: #2563EB;
+            --secondary: #10B981;
+            --accent: #8B5CF6;
+            --warning: #F59E0B;
+            --text-dark: #1E293B;
+            --text-muted: #64748B;
+            --bg-light: #F8FAFC;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
+            --shadow-lg: 0 16px 48px rgba(0,0,0,0.16);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+            color: var(--text-dark);
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            padding: 60px 0;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.5;
+        }
+
+        .hero-section h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .hero-section p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Container */
+        .main-container {
+            max-width: 1200px;
+            margin: -40px auto 60px;
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Progress Steps */
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            width: 100%;
+            height: 3px;
+            background: #E2E8F0;
+            z-index: 0;
+        }
+
+        .step:last-child::after {
+            display: none;
+        }
+
+        .step.active::after {
+            background: var(--primary);
+        }
+
+        .step-number {
+            background: #E2E8F0;
+            color: var(--text-muted);
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s;
+        }
+
+        .step.active .step-number {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(59,130,246,0.4);
+        }
+
+        .step.completed .step-number {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .step.active .step-label {
+            color: var(--primary);
+        }
+
+        /* Main Card */
+        .subscription-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+
+        .card-row {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            min-height: 600px;
+        }
+
+        /* Plan Features Sidebar */
+        .plan-sidebar {
+            background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+            padding: 40px 30px;
+            border-right: 1px solid #E2E8F0;
+        }
+
+        .plan-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .plan-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            box-shadow: 0 8px 20px rgba(59,130,246,0.3);
+        }
+
+        .plan-icon .material-icons-round {
+            font-size: 32px;
+            color: white;
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .plan-price {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--primary);
+        }
+
+        .plan-price small {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .features-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s;
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideIn 0.5s forwards;
+        }
+
+        @@keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .feature-item:nth-child(1) { animation-delay: 0.1s; }
+        .feature-item:nth-child(2) { animation-delay: 0.2s; }
+        .feature-item:nth-child(3) { animation-delay: 0.3s; }
+        .feature-item:nth-child(4) { animation-delay: 0.4s; }
+        .feature-item:nth-child(5) { animation-delay: 0.5s; }
+        .feature-item:nth-child(6) { animation-delay: 0.6s; }
+
+        .feature-item:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, var(--secondary), #14B8A6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .feature-icon .material-icons-round {
+            font-size: 14px;
+            color: white;
+        }
+
+        .feature-text {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        /* Form Content */
+        .form-content {
+            padding: 40px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #F1F5F9;
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .section-icon .material-icons-round {
+            font-size: 22px;
+            color: white;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        /* Form Inputs */
+        .form-label {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+            outline: none;
+        }
+
+        /* Grade Box */
+        .grade-box {
+            background: #F8FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .grade-box:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .remove-grade {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #FEE2E2;
+            color: #DC2626;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .remove-grade:hover {
+            background: #DC2626;
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        /* Buttons */
+        .btn-add-grade {
+            background: white;
+            border: 2px dashed var(--primary);
+            color: var(--primary);
+            border-radius: 12px;
+            padding: 14px 24px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-add-grade:hover {
+            background: var(--primary);
+            color: white;
+            border-style: solid;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 16px 32px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(59,130,246,0.3);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(59,130,246,0.4);
+        }
+
+        /* Alert */
+        .plan-alert {
+            background: linear-gradient(135deg, #DBEAFE, #E0E7FF);
+            border: 2px solid var(--primary);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .alert-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .alert-icon .material-icons-round {
+            font-size: 26px;
+            color: white;
+        }
+
+        .alert-content h5 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0 0 4px 0;
+        }
+
+        .alert-content p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @@media (max-width: 992px) {
+            .card-row {
+                grid-template-columns: 1fr;
+            }
+
+            .plan-sidebar {
+                border-right: none;
+                border-bottom: 1px solid #E2E8F0;
+            }
+
+            .hero-section h1 {
+                font-size: 2rem;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .form-content {
+                padding: 24px 20px;
+            }
+
+            .step-indicator {
+                padding: 20px 15px;
+            }
+
+            .step-label {
+                font-size: 0.75rem;
+            }
+
+            .hero-section {
+                padding: 40px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <h1>Complete Your Subscription</h1>
+        <p>Get started with EduTrack in just a few steps</p>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Progress Steps -->
+        <div class="step-indicator">
+            <div class="step active">
+                <div class="step-number">1</div>
+                <div class="step-label">Plan Selection</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-label">School Info</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-label">Admin Setup</div>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-label">Complete</div>
+            </div>
+        </div>
+
+        <!-- Subscription Card -->
+        <div class="subscription-card">
+            <div class="card-row">
+                <!-- Plan Sidebar -->
+                <div class="plan-sidebar">
+                    <div class="plan-header">
+                        <div class="plan-icon">
+                            <span class="material-icons-round" id="planIconElement">workspace_premium</span>
+                        </div>
+                        <div class="plan-name" id="planNameElement">Starter Plan</div>
+                        <div class="plan-price">
+                            <span id="planPriceElement">KES 5,000</span>
+                            <small>/month</small>
+                        </div>
+                    </div>
+
+                    <h6 style="font-weight: 700; color: var(--text-dark); margin-bottom: 16px; font-size: 0.95rem;">Plan Features</h6>
+                    <ul class="features-list" id="planFeaturesList">
+                        <!-- Features will be injected by JavaScript -->
+                    </ul>
+                </div>
+
+                <!-- Form Content -->
+                <div class="form-content">
+                    <form method="post" action="/subscribe" id="subscriptionForm" novalidate>
+                        
+                        <!-- School Information -->
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <span class="material-icons-round">school</span>
+                            </div>
+                            <h3 class="section-title">School Information</h3>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">School Name</label>
+                                <input type="text" name="SchoolName" class="form-control" placeholder="Enter school name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">MOE/KNEC Code</label>
+                                <input type="text" name="RegNo" class="form-control" placeholder="Registration number" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">School Email</label>
+                                <input type="email" name="AdminEmail" class="form-control" placeholder="school@example.com" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">M-Pesa Paybill</label>
+                                <input type="text" name="Paybill" class="form-control" placeholder="Paybill number" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">School Gender</label>
+                                <select name="SchoolGender" class="form-select" required>
+                                    <option value="">Select gender type</option>
+                                    <option value="Boys">Boys Only</option>
+                                    <option value="Girls">Girls Only</option>
+                                    <option value="Mixed">Mixed</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Admin Information -->
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <span class="material-icons-round">admin_panel_settings</span>
+                            </div>
+                            <h3 class="section-title">Administrator Account</h3>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Admin Name</label>
+                                <input type="text" name="AdminName" class="form-control" placeholder="Full name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Admin Phone</label>
+                                <input type="tel" name="AdminPhone" class="form-control" placeholder="+254 XXX XXX XXX" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Password</label>
+                                <input type="password" name="Password" class="form-control" placeholder="Create strong password" required>
+                            </div>
+                        </div>
+
+                        <!-- Grade Structure -->
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <span class="material-icons-round">format_list_numbered</span>
+                            </div>
+                            <h3 class="section-title">Grade & Fee Structure</h3>
+                        </div>
+
+                        <div id="gradesContainer" class="mb-3"></div>
+                        
+                        <button type="button" id="addGradeBtn" class="btn-add-grade w-100 mb-4">
+                            <span class="material-icons-round">add_circle</span>
+                            Add Grade
+                        </button>
+
+                        <input type="hidden" name="PlanAmount" value="@plan" id="planAmountInput" />
+                        
+                        <button type="submit" class="btn-submit">
+                            <span class="material-icons-round" style="vertical-align: middle; margin-right: 8px;">check_circle</span>
+                            Complete Subscription
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.23.0/sweetalert2.min.js"></script>
+
+    <script>
+        // Plan configurations with features
+      // Plan configurations with features
+// Plan configurations with features
+const planConfigs = {
+    '5000': {
+        name: 'Starter Plan',
+        icon: 'rocket_launch',
+        features: [
+            'Up to 300 students',
+            'Basic Dashboard & Reporting',
+            'Attendance & Grades Tracking',
+            'Fee Management System',
+            'Email Support',
+            '7-Day Free Trial'
+        ]
+    },
+    '15000': {
+        name: 'Pro Plan',
+        icon: 'stars',
+        features: [
+            'Up to 1,500 students',
+            'Advanced Dashboard & Analytics',
+            'AI-Assisted Insights',
+            'Performance Prediction',
+            'Priority Email Support',
+            'Custom Reports & Export',
+            '14-Day Free Trial'
+        ]
+    },
+    '30000': {
+        name: 'Enterprise Plan',
+        icon: 'workspace_premium',
+        features: [
+            'Unlimited Students',
+            'Full Dashboard, API & Reporting',
+            'Advanced AI Analytics',
+            'Custom Integrations',
+            'Priority Phone & Email Support',
+            'Dedicated Account Manager',
+            '30-Day Free Trial'
+        ]
+    },
+    'onetime': {
+        name: 'Full System Purchase',
+        icon: 'inventory',
+        features: [
+            'Complete Source Code Access',
+            'Self-Hosted Solution',
+            'Lifetime License',
+            'No Monthly Fees',
+            'Full Customization Rights',
+            'Installation Support',
+            '1 Year Technical Support'
+        ]
+    }
+};
+
+// Get plan from URL or default
+const urlParams = new URLSearchParams(window.location.search);
+const selectedPlan = urlParams.get('plan') || '5000';
+const planConfig = planConfigs[selectedPlan] || planConfigs['5000'];
+
+// Update plan display
+document.getElementById('planNameElement').textContent = planConfig.name;
+document.getElementById('planIconElement').textContent = planConfig.icon;
+
+if (selectedPlan === 'onetime') {
+    document.getElementById('planPriceElement').textContent = 'Contact Sales';
+    document.querySelector('.plan-price small').textContent = 'for pricing';
+} else {
+    document.getElementById('planPriceElement').textContent = `KES ${parseInt(selectedPlan).toLocaleString()}`;
+}
+
+// Populate features
+const featuresList = document.getElementById('planFeaturesList');
+planConfig.features.forEach(feature => {
+    const li = document.createElement('li');
+    li.className = 'feature-item';
+    li.innerHTML = `
+        <div class="feature-icon">
+            <span class="material-icons-round">check</span>
+        </div>
+        <div class="feature-text">${feature}</div>
+    `;
+    featuresList.appendChild(li);
+});
+
+// Update hidden input
+document.getElementById('planAmountInput').value = selectedPlan;
+
+// ===========================
+// GRADE MANAGEMENT
+// ===========================
+const gradesContainer = document.getElementById("gradesContainer");
+let gradeCount = 0;
+
+document.getElementById("addGradeBtn").addEventListener('click', () => {
+    const div = document.createElement("div");
+    div.className = "grade-box";
+    div.style.animation = "slideIn 0.5s forwards";
+    div.innerHTML = `
+        <button type="button" class="remove-grade">
+            <span class="material-icons-round" style="font-size: 18px;">close</span>
+        </button>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Grade Name</label>
+                <input class="form-control grade-name" placeholder="e.g., Grade 1" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Term 1 Fee</label>
+                <input type="number" class="form-control term1-fee" placeholder="0" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Term 2 Fee</label>
+                <input type="number" class="form-control term2-fee" placeholder="0" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Term 3 Fee</label>
+                <input type="number" class="form-control term3-fee" placeholder="0" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Streams</label>
+                <input class="form-control grade-streams" placeholder="A, B, C (optional)">
+            </div>
+        </div>`;
+    
+    gradesContainer.appendChild(div);
+    gradeCount++;
+    
+    div.querySelector(".remove-grade").onclick = () => {
+        div.style.animation = "slideIn 0.3s reverse";
+        setTimeout(() => div.remove(), 300);
+    };
+});
+
+// ===========================
+// FORM SUBMISSION
+// ===========================
+document.getElementById("subscriptionForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    console.log("[FORM] Submission started");
+
+    const formData = new FormData(e.target);
+
+    // Debug: Log all form elements
+    console.log("[FORM] All select elements on page:", document.querySelectorAll('select'));
+    console.log("[FORM] Select with SchoolGender:", document.querySelector('select[name="SchoolGender"]'));
+
+    // Get school gender from select element
+    const schoolGenderSelect = document.querySelector('select[name="SchoolGender"]');
+    
+    if (!schoolGenderSelect) {
+        console.log("[FORM] ERROR: Select element not found!");
+        Swal.fire("Error", "School gender field not found in form", "error");
+        return;
+    }
+
+    const schoolGender = schoolGenderSelect.value.trim();
+    
+    console.log("[FORM] School Gender select element:", schoolGenderSelect);
+    console.log("[FORM] School Gender value:", schoolGender);
+    console.log("[FORM] School Gender value length:", schoolGender.length);
+
+    // Validate gender is selected
+    if (!schoolGender || schoolGender === "") {
+        console.log("[FORM] ERROR: School gender is empty");
+        console.log("[FORM] Available options:", Array.from(schoolGenderSelect.options).map(o => ({ text: o.text, value: o.value })));
+        Swal.fire("Error", "School gender is required - please select Boys Only, Girls Only, or Mixed", "error");
+        return;
+    }
+
+    // Build grades array
+    const grades = [];
+    [...gradesContainer.children].forEach((gradeDiv, index) => {
+        const name = gradeDiv.querySelector(".grade-name").value.trim();
+        const term1 = parseInt(gradeDiv.querySelector(".term1-fee").value) || 0;
+        const term2 = parseInt(gradeDiv.querySelector(".term2-fee").value) || 0;
+        const term3 = parseInt(gradeDiv.querySelector(".term3-fee").value) || 0;
+        const streamsInput = gradeDiv.querySelector(".grade-streams").value.trim();
+
+        // Parse streams: "A, B, C" → ["A", "B", "C"]
+        const streams = streamsInput
+            ? streamsInput.split(",").map(s => s.trim()).filter(s => s.length > 0)
+            : [];
+
+        console.log(`[FORM] Grade ${index}:`, { name, term1, term2, term3, streams });
+
+        if (name) {
+            grades.push({
+                name: name,
+                fees: {
+                    term1: term1,
+                    term2: term2,
+                    term3: term3
+                },
+                streams: streams
+            });
+        }
+    });
+
+    // Validate grades
+    if (grades.length === 0) {
+        console.log("[FORM] ERROR: No grades added");
+        Swal.fire("Error", "Please add at least one grade", "error");
+        return;
+    }
+
+    for (const grade of grades) {
+        if (!grade.name || grade.name.length === 0) {
+            console.log("[FORM] ERROR: Grade name is empty");
+            Swal.fire("Error", "All grades must have a name", "error");
+            return;
+        }
+        if (grade.fees.term1 <= 0 || grade.fees.term2 <= 0 || grade.fees.term3 <= 0) {
+            console.log(`[FORM] ERROR: Grade "${grade.name}" has zero fees`);
+            Swal.fire("Error", `Grade "${grade.name}" must have fees > 0 for all terms`, "error");
+            return;
+        }
+    }
+
+    // Build final request object (PascalCase to match C# model)
+    const requestData = {
+        SchoolName: formData.get("SchoolName"),
+        AdminEmail: formData.get("AdminEmail"),
+        Password: formData.get("Password"),
+        SchoolGender: schoolGender,
+        PlanAmount: parseFloat(formData.get("PlanAmount")) || 5000,
+        Grades: grades
+    };
+
+    console.log("[FORM] Final request data:", requestData);
+
+    Swal.fire({
+        title: 'Processing...',
+        html: 'Setting up your subscription',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    try {
+        const res = await fetch("/subscribe", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestData)
+        });
+
+        const result = await res.json();
+        console.log("[FORM] Server response:", result);
+        Swal.close();
+
+        if (!result.success) {
+            console.log("[FORM] Server error:", result.message);
+            Swal.fire("Error", result.message, "error");
+            return;
+        }
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Verification Email Sent',
+            html: `A verification email has been sent to <strong>${requestData.AdminEmail}</strong>. Please check your inbox to complete the subscription.`,
+            confirmButtonText: 'OK',
+            allowOutsideClick: false
+        }).then(() => {
+            window.location.href = result.redirect || "/";
+        });
+    } catch (error) {
+        Swal.close();
+        console.error("[FORM] Fetch error:", error);
+        Swal.fire("Error", "Something went wrong. Please try again.", "error");
+    }
+});
+    </script>
+</body>
+</html>

@@ -1,0 +1,1149 @@
+@{
+    Layout = null;
+    var schoolName = ViewData["SchoolName"]?.ToString() ?? "School";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parents Portal | @schoolName</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.7/signalr.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bg: #F1F5F9;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --primary: #3B82F6;
+            --primary-hover: #2563EB;
+            --primary-soft: #EFF6FF;
+            --success: #10B981;
+            --success-soft: #D1FAE5;
+            --warning: #F59E0B;
+            --warning-soft: #FEF3C7;
+            --danger: #EF4444;
+            --danger-soft: #FEE2E2;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --accent: #8B5CF6;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+            background: var(--bg);
+        }
+        
+        /* Navigation Bar */
+        .navbar {
+            background: var(--surface);
+            padding: 16px 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: var(--primary);
+        }
+        
+        .navbar-logo span {
+            font-size: 32px;
+        }
+        
+        .navbar-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        
+        .navbar-links {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+        
+        .navbar-links a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+        
+        .navbar-links a:hover {
+            background: var(--primary-soft);
+            color: var(--primary);
+        }
+        
+        .back-home {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--primary-soft);
+            color: var(--primary);
+            padding: 10px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .back-home:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateX(-4px);
+        }
+        
+        /* Hero Background */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            background-attachment: fixed;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+            opacity: 0.5;
+            animation: float 20s infinite linear;
+        }
+        
+        @@keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(60px, 60px); }
+        }
+        
+        .hero-content {
+            text-align: center;
+            color: white;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 42px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .hero-content h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 12px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .hero-content p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Main Container */
+        .main-container {
+            max-width: 500px;
+            margin: -60px auto 0;
+            padding: 0 20px 40px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .login-card {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 40px 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            border: 2px solid var(--border);
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        
+        .login-header h2 {
+            font-size: 1.6rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+        
+        .login-header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+        }
+        
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(59,130,246,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .login-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(59,130,246,0.4);
+        }
+        
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .error-message {
+            background: var(--danger-soft);
+            border: 2px solid var(--danger);
+            color: var(--danger);
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .error-message.show {
+            display: flex;
+        }
+        
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15,23,42,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .modal-backdrop.active {
+            display: flex;
+        }
+        
+        .modal-card {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: scaleIn 0.3s ease;
+        }
+        
+        @@keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 16px;
+        }
+        
+        .modal-header h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 28px;
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+        
+        .close-btn:hover {
+            color: var(--text-main);
+            transform: rotate(90deg);
+        }
+        
+        .student-header {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .student-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 16px;
+            object-fit: cover;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        
+        .student-info h3 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        
+        .student-info p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .info-card {
+            background: var(--bg);
+            padding: 16px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+        }
+        
+        .info-card label {
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 6px;
+        }
+        
+        .info-card .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        
+        .fee-section {
+            background: linear-gradient(135deg, var(--warning-soft), #FEF9E7);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            border: 2px solid var(--warning);
+        }
+        
+        .fee-section h4 {
+            font-size: 0.9rem;
+            color: var(--warning);
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .fee-amount {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--warning);
+            margin-bottom: 12px;
+        }
+        
+        .fee-breakdown {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+        }
+        
+        .fee-item {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .fee-item label {
+            color: var(--text-muted);
+        }
+        
+        .fee-item .amount {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex: 1;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            box-shadow: 0 8px 20px rgba(59,130,246,0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(59,130,246,0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--border);
+            color: var(--text-main);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--primary-soft);
+            color: var(--primary);
+        }
+        
+        .payment-form {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .success-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: var(--success-soft);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 56px;
+        }
+        
+        .success-state h3 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--success);
+            margin-bottom: 8px;
+        }
+        
+        .success-state p {
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            font-size: 0.95rem;
+        }
+        
+        .receipt-details {
+            background: var(--bg);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: left;
+            margin-bottom: 24px;
+            border: 2px solid var(--border);
+        }
+        
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+        
+        .receipt-item:last-child {
+            border-bottom: none;
+        }
+        
+        .receipt-item.total {
+            border-top: 2px solid var(--border);
+            padding-top: 12px;
+            font-weight: 700;
+            color: var(--success);
+        }
+        
+        .download-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--success), #14B8A6);
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16,185,129,0.3);
+        }
+        
+        @@media (max-width: 768px) {
+            .navbar-links { display: none; }
+            .hero { min-height: 200px; }
+            .hero-content h1 { font-size: 1.8rem; }
+            .main-container { margin-top: -40px; }
+            .login-card { padding: 28px 20px; }
+            .modal-card { padding: 20px; }
+            .student-header { flex-direction: column; align-items: center; text-align: center; }
+            .student-photo { width: 100px; height: 100px; }
+            .info-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVIGATION BAR -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-logo">
+                <span class="material-icons-round">school</span>
+                <div>
+                    <div>@schoolName</div>
+                    <div class="navbar-title">Parents Portal</div>
+                </div>
+            </div>
+            <div class="navbar-links">
+                <a href="/">Home</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+                <div class="back-home" onclick="goHome()">
+                    <span class="material-icons-round">home</span>
+                    Home
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO BACKGROUND -->
+    <div class="hero">
+        <div class="hero-content">
+            <div class="hero-icon">
+                <span class="material-icons-round">security</span>
+            </div>
+            <h1>Parents Portal</h1>
+            <p>Manage your child's school fees securely</p>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-container">
+        <!-- LOGIN PAGE -->
+        <div class="page active" id="loginPage">
+            <div class="login-card">
+                <div class="login-header">
+                    <h2>Access Portal</h2>
+                    <p>Enter your student's details to continue</p>
+                </div>
+                <div class="error-message" id="loginError">
+                    <span class="material-icons-round">error</span>
+                    <span id="loginErrorText"></span>
+                </div>
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="accountNo">Student Account Number</label>
+                        <input type="text" id="accountNo" name="accountNo" placeholder="e.g., 1234567" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="studentName">Student Full Name</label>
+                        <input type="text" id="studentName" name="studentName" placeholder="Enter student's name" required />
+                    </div>
+                    <button type="submit" class="login-btn">
+                        <span class="material-icons-round">login</span>
+                        Access Portal
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- STUDENT DETAILS MODAL -->
+    <div class="modal-backdrop" id="studentModalBackdrop">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Student Details</h2>
+                <button class="close-btn" onclick="closeStudentModal()">✕</button>
+            </div>
+
+            <div class="student-header">
+                <img id="studentPhoto" src="" alt="Student Photo" class="student-photo">
+                <div class="student-info">
+                    <h3 id="studentFullName"></h3>
+                    <p><strong>Account No:</strong> <span id="studentAccNo"></span></p>
+                    <p><strong>Grade:</strong> <span id="studentGrade"></span></p>
+                    <p><strong>Gender:</strong> <span id="studentGender"></span></p>
+                    <p><strong>Status:</strong> <span id="studentStatus"></span></p>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <label>Date of Birth</label>
+                    <div class="value" id="studentDOB">-</div>
+                </div>
+                <div class="info-card">
+                    <label>Stream</label>
+                    <div class="value" id="studentStream">-</div>
+                </div>
+                <div class="info-card">
+                    <label>Admission Date</label>
+                    <div class="value" id="studentAdmissionDate">-</div>
+                </div>
+                <div class="info-card">
+                    <label>Previous School</label>
+                    <div class="value" id="studentPrevSchool">-</div>
+                </div>
+            </div>
+
+            <div class="fee-section">
+                <h4>Fee Balance</h4>
+                <div class="fee-amount" id="feeBalance">KSH 0</div>
+                <div class="fee-breakdown">
+                    <div class="fee-item">
+                        <label>Total Due:</label>
+                        <span class="amount" id="feeTotalDue">KSH 0</span>
+                    </div>
+                    <div class="fee-item">
+                        <label>Amount Paid:</label>
+                        <span class="amount" id="feeAmountPaid">KSH 0</span>
+                    </div>
+                    <div class="fee-item">
+                        <label>Term 1:</label>
+                        <span class="amount" id="feeTerm1">KSH 0</span>
+                    </div>
+                    <div class="fee-item">
+                        <label>Term 2:</label>
+                        <span class="amount" id="feeTerm2">KSH 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="notificationsSection" style="margin-bottom: 18px;">
+                <label style="font-weight: 700; display: block; margin-bottom: 8px;">Notifications & Progress</label>
+                <div id="notificationsList" style="background: #fff; border: 1px solid var(--border); padding: 12px; border-radius: 10px; max-height: 220px; overflow-y: auto;">
+                    <div id="notificationsEmpty" style="color: var(--text-muted);">No notifications yet.</div>
+                </div>
+                <div style="margin-top: 8px; display: flex; gap: 8px;">
+                    <button id="markAllReadBtn" class="btn btn-light" onclick="markAllNotificationsRead()" style="padding:8px 12px;">Mark all read</button>
+                    <button id="refreshNotificationsBtn" class="btn btn-light" onclick="refreshNotifications()" style="padding:8px 12px;">Refresh</button>
+                </div>
+            </div>
+
+            <div id="medicalInfoSection" style="display: none; margin-bottom: 24px; background: var(--primary-soft); padding: 16px; border-radius: 12px; border: 2px solid var(--primary);">
+                <label style="font-weight: 700; color: var(--primary); display: block; margin-bottom: 8px;">Medical Information</label>
+                <p id="studentMedicalInfo" style="color: var(--text-muted); font-size: 0.9rem;"></p>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="openPaymentModal()">
+                    <span class="material-icons-round">payment</span>
+                    Pay Fees
+                </button>
+                <button class="btn btn-secondary" onclick="closeStudentModal()">
+                    <span class="material-icons-round">close</span>
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAYMENT MODAL -->
+    <div class="modal-backdrop" id="paymentModalBackdrop">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Pay Student Fees</h2>
+                <button class="close-btn" onclick="closePaymentModal()">✕</button>
+            </div>
+
+            <div id="paymentFormState">
+                <form id="paymentForm" onsubmit="handlePayment(event)" class="payment-form">
+                    <div class="form-group">
+                        <label for="paymentAccountNo">Student Account Number</label>
+                        <input type="text" id="paymentAccountNo" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentAmount">Amount to Pay (KSH)</label>
+                        <input type="number" id="paymentAmount" name="amount" placeholder="Enter amount" min="1" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentPhone">Parent Phone Number</label>
+                        <input type="tel" id="paymentPhone" name="phone" placeholder="+254 7XX XXX XXX" required />
+                    </div>
+                    <button type="submit" class="login-btn">
+                        <span class="material-icons-round">payment</span>
+                        Initiate M-Pesa Payment
+                    </button>
+                </form>
+            </div>
+
+            <div id="paymentSuccessState" style="display: none;">
+                <div class="success-state">
+                    <div class="success-icon">✓</div>
+                    <h3>Payment Successful!</h3>
+                    <p>Your payment has been processed successfully</p>
+                    <div class="receipt-details">
+                        <div class="receipt-item">
+                            <span>Transaction ID:</span>
+                            <strong id="receiptTransactionId">-</strong>
+                        </div>
+                        <div class="receipt-item">
+                            <span>Student:</span>
+                            <strong id="receiptStudentName">-</strong>
+                        </div>
+                        <div class="receipt-item">
+                            <span>Date & Time:</span>
+                            <strong id="receiptDateTime">-</strong>
+                        </div>
+                        <div class="receipt-item">
+                            <span>Payment Method:</span>
+                            <strong>M-Pesa</strong>
+                        </div>
+                        <div class="receipt-item">
+                            <span>Reference:</span>
+                            <strong id="receiptReference">-</strong>
+                        </div>
+                        <div class="receipt-item total">
+                            <span>Amount Paid:</span>
+                            <span id="receiptAmount">KSH 0</span>
+                        </div>
+                    </div>
+                    <button class="download-btn" onclick="downloadReceipt()">
+                        <span class="material-icons-round">download</span>
+                        Download Receipt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStudent = null;
+        const schoolName = '@schoolName';
+
+        function goHome() {
+            window.location.href = '/';
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const accountNo = document.getElementById('accountNo').value;
+            const studentName = document.getElementById('studentName').value;
+            const btn = document.querySelector('.login-btn');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> Verifying...';
+
+            try {
+                const response = await fetch(`/${schoolName}/parent/api/student-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accountNo, studentName })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentStudent = data.student;
+                    displayStudentDetails(data.student);
+                    openStudentModal();
+                    document.getElementById('loginError').classList.remove('show');
+                } else {
+                    showLoginError(data.message || 'Invalid credentials');
+                }
+            } catch (error) {
+                showLoginError('Connection error. Please try again.');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-icons-round">login</span> Access Portal';
+            }
+        }
+
+        function showLoginError(message) {
+            const errorEl = document.getElementById('loginError');
+            document.getElementById('loginErrorText').textContent = message;
+            errorEl.classList.add('show');
+        }
+
+        function displayStudentDetails(student) {
+            document.getElementById('studentPhoto').src = student.photoPath || 'https://via.placeholder.com/120';
+            document.getElementById('studentFullName').textContent = student.fullName;
+            document.getElementById('studentAccNo').textContent = student.accountNo;
+            document.getElementById('studentGrade').textContent = student.grade;
+            document.getElementById('studentGender').textContent = student.gender;
+            document.getElementById('studentStatus').textContent = student.status;
+            document.getElementById('studentDOB').textContent = new Date(student.dateOfBirth).toLocaleDateString();
+            document.getElementById('studentStream').textContent = student.stream || '-';
+            document.getElementById('studentAdmissionDate').textContent = new Date(student.admissionDate).toLocaleDateString();
+            document.getElementById('studentPrevSchool').textContent = student.previousSchool || '-';
+
+            document.getElementById('feeTotalDue').textContent = `KSH ${student.fees?.totalDue || 0}`;
+            document.getElementById('feeAmountPaid').textContent = `KSH ${student.fees?.amountPaid || 0}`;
+            document.getElementById('feeTerm1').textContent = `KSH ${student.fees?.term1 || 0}`;
+            document.getElementById('feeTerm2').textContent = `KSH ${student.fees?.term2 || 0}`;
+            document.getElementById('feeBalance').textContent = `KSH ${student.fees?.balance || 0}`;
+
+            if (student.medicalInfo) {
+                document.getElementById('studentMedicalInfo').textContent = student.medicalInfo;
+                document.getElementById('medicalInfoSection').style.display = 'block';
+            }
+
+            document.getElementById('paymentAccountNo').value = student.accountNo;
+
+            // Fetch and display notifications related to this student
+            refreshNotifications();
+        }
+
+        function openStudentModal() {
+            document.getElementById('studentModalBackdrop').classList.add('active');
+        }
+
+        function closeStudentModal() {
+            document.getElementById('studentModalBackdrop').classList.remove('active');
+        }
+
+        function openPaymentModal() {
+            document.getElementById('paymentModalBackdrop').classList.add('active');
+            document.getElementById('paymentFormState').style.display = 'block';
+            document.getElementById('paymentSuccessState').style.display = 'none';
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModalBackdrop').classList.remove('active');
+        }
+
+        // =========================
+        // Notifications client helpers
+        // =========================
+        async function refreshNotifications() {
+            if (!currentStudent || !currentStudent.id) return;
+            await fetchNotifications(currentStudent.id);
+        }
+
+        async function fetchNotifications(studentId) {
+            try {
+                const resp = await fetch(`/${schoolName}/parent/api/notifications?studentId=${studentId}`);
+                const data = await resp.json();
+                if (data.success) {
+                    renderNotifications(data.notifications || []);
+                } else {
+                    console.warn('Failed to load notifications', data.message);
+                }
+            } catch (err) {
+                console.error('Error fetching notifications', err);
+            }
+        }
+
+        function renderNotifications(list) {
+            const container = document.getElementById('notificationsList');
+            container.innerHTML = '';
+            if (!list || list.length === 0) {
+                container.innerHTML = '<div id="notificationsEmpty" style="color: var(--text-muted);">No notifications yet.</div>';
+                return;
+            }
+            list.forEach(n => {
+                const el = document.createElement('div');
+                el.style.padding = '10px 12px';
+                el.style.borderBottom = '1px dashed var(--border)';
+                el.style.display = 'flex';
+                el.style.justifyContent = 'space-between';
+                el.style.alignItems = 'center';
+
+                const left = document.createElement('div');
+                left.style.flex = '1';
+                left.innerHTML = `<strong style="display:block">${n.title || n.type || 'Notice'}</strong><small style="color:var(--text-muted);">${new Date(n.createdAt).toLocaleString()}</small><div style="margin-top:6px;">${n.message}</div>`;
+
+                const right = document.createElement('div');
+                right.style.marginLeft = '12px';
+                right.innerHTML = `<button class="btn btn-light" style="padding:6px 8px;" onclick="markNotificationsRead([${n.id}])">Mark read</button>`;
+
+                if (n.isRead) {
+                    el.style.opacity = '0.6';
+                } else {
+                    el.style.background = 'linear-gradient(90deg, rgba(59,130,246,0.03), transparent)';
+                }
+
+                el.appendChild(left);
+                el.appendChild(right);
+                container.appendChild(el);
+            });
+
+            // If SignalR enabled, open connection to listen for new notifications for this student
+            if (window.signalRConnection && currentStudent && currentStudent.id) {
+                const group = `student_${currentStudent.id}`;
+                window.signalRConnection.invoke('SubscribeToStudent', group).catch(e => console.warn('SignalR subscribe failed', e));
+            } else {
+                // Try to initialize SignalR connection (optional)
+                if (typeof signalR !== 'undefined') setupSignalR();
+            }
+        }
+
+        async function markNotificationsRead(ids) {
+            if (!currentStudent || !currentStudent.id) return;
+            try {
+                const resp = await fetch(`/${schoolName}/parent/api/notifications/mark-read`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId: currentStudent.id, notificationIds: ids })
+                });
+                const data = await resp.json();
+                if (data.success) refreshNotifications();
+            } catch (err) {
+                console.error('Error marking notifications', err);
+            }
+        }
+
+        async function markAllNotificationsRead() {
+            const container = document.getElementById('notificationsList');
+            const ids = Array.from(container.querySelectorAll('button[onclick]'))
+                .map(btn => {
+                    const match = btn.getAttribute('onclick').match(/markNotificationsRead\(\[(\d+)\]\)/);
+                    return match ? parseInt(match[1]) : null;
+                }).filter(x => x);
+            if (ids.length === 0) return;
+            await markNotificationsRead(ids);
+        }
+
+        async function handlePayment(e) {
+            e.preventDefault();
+            const amount = document.getElementById('paymentAmount').value;
+            const phone = document.getElementById('paymentPhone').value;
+            const btn = document.querySelector('#paymentForm button');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> Processing...';
+
+            try {
+                const response = await fetch(`/${schoolName}/parent/api/initiate-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentId: currentStudent.id,
+                        accountNo: currentStudent.accountNo,
+                        amount: parseInt(amount),
+                        phone
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showPaymentSuccess(data);
+                } else {
+                    alert('Payment failed: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Payment error: ' + error.message);
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-icons-round">payment</span> Initiate M-Pesa Payment';
+            }
+        }
+
+        function showPaymentSuccess(data) {
+            document.getElementById('paymentFormState').style.display = 'none';
+            document.getElementById('paymentSuccessState').style.display = 'block';
+
+            const now = new Date();
+            document.getElementById('receiptTransactionId').textContent = data.transactionId || 'TXN' + Date.now();
+            document.getElementById('receiptStudentName').textContent = currentStudent.fullName;
+            document.getElementById('receiptDateTime').textContent = now.toLocaleString();
+            document.getElementById('receiptReference').textContent = data.reference || 'N/A';
+            document.getElementById('receiptAmount').textContent = `KSH ${data.amount}`;
+        }
+
+        async function downloadReceipt() {
+            const resp = await fetch(`/${schoolName}/parent/api/notifications?studentId=${currentStudent.id}`);
+            const data = await resp.json();
+            // For auditing, we could attach latest notification summary to receipt (optional)
+            const receiptHTML = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Receipt</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .receipt { max-width: 500px; margin: 0 auto; background: white; border: 2px solid #333; padding: 30px; border-radius: 12px; }
+        .receipt h1 { text-align: center; margin-bottom: 30px; color: #333; font-size: 28px; }
+        .school-name { text-align: center; font-size: 14px; color: #666; margin-bottom: 20px; text-transform: uppercase; font-weight: bold; }
+        .receipt-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd; }
+        .receipt-item.total { border-top: 2px solid #333; font-weight: bold; font-size: 1.2em; color: #10B981; padding-top: 12px; }
+        .receipt-item:last-child { border-bottom: none; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 0.9em; border-top: 2px solid #ddd; padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="receipt">
+        <div class="school-name">@schoolName - Parents Portal</div>
+        <h1>Payment Receipt</h1>
+        <div class="receipt-item">
+            <span>Transaction ID:</span>
+            <strong>${document.getElementById('receiptTransactionId').textContent}</strong>
+        </div>
+        <div class="receipt-item">
+            <span>Student Name:</span>
+            <strong>${document.getElementById('receiptStudentName').textContent}</strong>
+        </div>
+        <div class="receipt-item">
+            <span>Date & Time:</span>
+            <strong>${document.getElementById('receiptDateTime').textContent}</strong>
+        </div>
+        <div class="receipt-item">
+            <span>Payment Method:</span>
+            <strong>M-Pesa</strong>
+        </div>
+        <div class="receipt-item">
+            <span>Reference:</span>
+            <strong>${document.getElementById('receiptReference').textContent}</strong>
+        </div>
+        <div class="receipt-item total">
+            <span>Amount Paid:</span>
+            <span>${document.getElementById('receiptAmount').textContent}</span>
+        </div>
+        <div class="footer">
+            <p>Thank you for your payment!</p>
+            <p>This is an automated receipt generated on ${new Date().toLocaleDateString()}</p>
+            <p>For inquiries, contact the school office</p>
+        </div>
+    </div>
+</body>
+</html>`;
+
+            const blob = new Blob([receiptHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `receipt_${currentStudent.accountNo}_${Date.now()}.html`);
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        document.getElementById('studentModalBackdrop').addEventListener('click', function(e) {
+            if (e.target === this) closeStudentModal();
+        });
+
+        document.getElementById('paymentModalBackdrop').addEventListener('click', function(e) {
+            if (e.target === this) closePaymentModal();
+        });
+    </script>
+</body>
+</html>

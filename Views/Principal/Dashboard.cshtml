@@ -1,0 +1,1508 @@
+@{
+    ViewData["Title"] = "Principal Dashboard";
+    var schoolName = ViewData["SchoolName"]?.ToString() ?? "School";
+    var userEmail = ViewData["UserEmail"]?.ToString() ?? "principal@school.edu";
+    var schoolLogo = ViewData["SchoolLogo"]?.ToString() ?? "";
+    var schoolMotto = ViewData["SchoolMotto"]?.ToString() ?? "Excellence in Education";
+    var userInitial = string.IsNullOrEmpty(userEmail) ? "P" : userEmail[0].ToString().ToUpper();
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - @schoolName</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #f8fafc;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(229, 231, 235, 0.6);
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%),
+                        url('https://images.unsplash.com/photo-1427504494785-cdbe9fefcb30?w=1200&h=400&fit=crop');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(102, 126, 234, 0.7);
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .stat-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .sidebar {
+            transition: all 0.3s ease;
+            max-height: 100vh;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            padding-left: 1.5rem;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .nav-item.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-left: 4px solid #3b82f6;
+            padding-left: 1rem;
+        }
+
+        .section {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .tab-button {
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-button.active {
+            border-bottom-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        /* Smart Alert Styles */
+        .smart-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 320px;
+            max-width: 400px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .smart-alert.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .smart-alert.error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .smart-alert.info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .smart-alert.warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        @@keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @@keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .smart-alert.hiding {
+            animation: slideOut 0.3s ease-in forwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="flex h-screen bg-slate-50">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar w-64 bg-white shadow-lg fixed h-screen border-r border-gray-200 z-40">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white">
+                        <i class="fas fa-graduation-cap text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold text-gray-800">EduHub</h1>
+                        <p class="text-xs text-gray-500">Principal Panel</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="p-4 space-y-2">
+                <button onclick="showSection('dashboard')" class="nav-item active w-full text-left px-4 py-3 rounded-lg text-gray-700 font-medium flex items-center space-x-3 hover:bg-blue-50">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="showSection('school-info')" class="nav-item w-full text-left px-4 py-3 rounded-lg text-gray-700 font-medium flex items-center space-x-3 hover:bg-blue-50">
+                    <i class="fas fa-school w-5"></i>
+                    <span>School Info</span>
+                </button>
+                <button onclick="showSection('grades')" class="nav-item w-full text-left px-4 py-3 rounded-lg text-gray-700 font-medium flex items-center space-x-3 hover:bg-blue-50">
+                    <i class="fas fa-book w-5"></i>
+                    <span>Grades</span>
+                </button>
+                <button onclick="showSection('learners')" class="nav-item w-full text-left px-4 py-3 rounded-lg text-gray-700 font-medium flex items-center space-x-3 hover:bg-blue-50">
+                    <i class="fas fa-users w-5"></i>
+                    <span>Learners</span>
+                </button>
+                <button onclick="showSection('staff')" class="nav-item w-full text-left px-4 py-3 rounded-lg text-gray-700 font-medium flex items-center space-x-3 hover:bg-blue-50">
+                    <i class="fas fa-user-tie w-5"></i>
+                    <span>Staff & Credentials</span>
+                </button>
+                <button onclick="showSection('finances')" class="nav-item w-full text-left px-4 py-3 rounded-lg text-gray-700 font-medium flex items-center space-x-3 hover:bg-blue-50">
+                    <i class="fas fa-money-bill-wave w-5"></i>
+                    <span>Finances</span>
+                </button>
+            </nav>
+
+            <div class="p-4 mt-auto border-t border-gray-200">
+                <a href="/@Html.Raw(Context.Request.RouteValues["schoolName"])/logout" 
+                   class="w-full text-left px-4 py-3 rounded-lg text-gray-700 font-medium flex items-center space-x-3 hover:bg-red-50 hover:text-red-600 transition-all">
+                    <i class="fas fa-sign-out-alt w-5"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 ml-64 overflow-auto">
+            <!-- Top Navigation -->
+            <nav class="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
+                <div class="px-8 py-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800">Welcome, Principal</h2>
+                            <p class="text-sm text-gray-500">@schoolName</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-6">
+                        <button class="relative p-2 hover:bg-gray-100 rounded-lg transition-all">
+                            <i class="fas fa-bell text-gray-600 text-lg"></i>
+                            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
+                        <div class="flex items-center space-x-3 border-l border-gray-200 pl-6">
+                            <div class="text-right">
+                                <p class="text-sm font-semibold text-gray-800">Principal</p>
+                                <p class="text-xs text-gray-500">@userEmail</p>
+                            </div>
+                            <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                @userInitial
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Dashboard Section -->
+            <div id="dashboard-section" class="section p-8">
+                <!-- Hero Section -->
+                <div class="hero-section rounded-2xl p-8 mb-8 text-white">
+                    <div class="hero-content">
+                        <h1 class="text-4xl font-bold mb-2">@schoolName</h1>
+                        <p class="text-lg opacity-90 mb-8">@schoolMotto</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                            <div>
+                                <p class="text-3xl font-bold" id="totalLearnersHero">0</p>
+                                <p class="text-sm opacity-75">Active Learners</p>
+                            </div>
+                            <div>
+                                <p class="text-3xl font-bold" id="totalStaffHero">0</p>
+                                <p class="text-sm opacity-75">Staff Members</p>
+                            </div>
+                            <div>
+                                <p class="text-3xl font-bold">98%</p>
+                                <p class="text-sm opacity-75">Pass Rate</p>
+                            </div>
+                            <div>
+                                <p class="text-3xl font-bold" id="totalRevenueHero">KES 0</p>
+                                <p class="text-sm opacity-75">Revenue</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                                <i class="fas fa-users text-xl"></i>
+                            </div>
+                            <span class="text-sm text-green-600 font-semibold">+8%</span>
+                        </div>
+                        <h3 class="text-sm text-gray-600 mb-1">Total Learners</h3>
+                        <p class="text-3xl font-bold text-gray-800" id="totalLearners">0</p>
+                    </div>
+
+                    <div class="stat-card bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600">
+                                <i class="fas fa-user-tie text-xl"></i>
+                            </div>
+                            <span class="text-sm text-green-600 font-semibold">+3%</span>
+                        </div>
+                        <h3 class="text-sm text-gray-600 mb-1">Staff Members</h3>
+                        <p class="text-3xl font-bold text-gray-800" id="totalStaff">0</p>
+                    </div>
+
+                    <div class="stat-card bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
+                                <i class="fas fa-money-bill-wave text-xl"></i>
+                            </div>
+                            <span class="text-sm text-green-600 font-semibold">+12%</span>
+                        </div>
+                        <h3 class="text-sm text-gray-600 mb-1">Total Revenue</h3>
+                        <p class="text-2xl font-bold text-gray-800" id="totalRevenue">KES 0</p>
+                    </div>
+
+                    <div class="stat-card bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
+                                <i class="fas fa-exclamation-triangle text-xl"></i>
+                            </div>
+                            <span class="text-sm text-red-600 font-semibold">-5%</span>
+                        </div>
+                        <h3 class="text-sm text-gray-600 mb-1">Outstanding Fees</h3>
+                        <p class="text-2xl font-bold text-gray-800" id="outstandingFees">KES 0</p>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 glass rounded-xl p-6 shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-bold text-gray-800">Recent Admissions</h3>
+                            <button onclick="showSection('learners')" class="text-blue-600 hover:text-blue-700 font-medium text-sm">View All</button>
+                        </div>
+                        <div id="recentAdmissionsContainer" class="space-y-4">
+                            <div class="text-center py-8 text-gray-500">Loading...</div>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-xl p-6 shadow-sm border border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-800 mb-6">Quick Actions</h3>
+                        <div class="space-y-3">
+                            <button onclick="openModal('registerStaff')" class="w-full btn-primary text-white py-3 rounded-lg font-medium flex items-center justify-center space-x-2 hover:shadow-lg">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Register Staff</span>
+                            </button>
+                            <button onclick="openModal('addLearner')" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium flex items-center justify-center space-x-2 transition-all">
+                                <i class="fas fa-user-graduate"></i>
+                                <span>Enroll Learner</span>
+                            </button>
+                            <button onclick="showSection('school-info')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium flex items-center justify-center space-x-2 transition-all">
+                                <i class="fas fa-cog"></i>
+                                <span>School Settings</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- School Info Section -->
+            <div id="school-info-section" class="section hidden p-8">
+                <div class="max-w-5xl">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-8">School Information</h2>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                        <!-- School Badge Upload -->
+                        <div class="glass rounded-xl p-8 shadow-sm border border-gray-200">
+                            <h3 class="text-lg font-bold text-gray-800 mb-6">School Badge</h3>
+                            <form id="badgeForm" class="flex flex-col items-center">
+                                <div id="badgePreviewContainer" class="w-32 h-32 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg flex items-center justify-center mb-6 cursor-pointer hover:bg-blue-100 transition-all overflow-hidden" onclick="document.getElementById('badgeFile').click()">
+                                    @if (!string.IsNullOrEmpty(schoolLogo))
+                                    {
+                                        <img id="badgeImg" src="@schoolLogo" alt="School Badge" class="w-full h-full object-cover rounded-lg">
+                                    }
+                                    else
+                                    {
+                                        <div id="badgePlaceholder" class="text-center text-blue-400">
+                                            <i class="fas fa-image text-4xl mb-2"></i>
+                                            <p class="text-sm">Click to upload</p>
+                                        </div>
+                                    }
+                                </div>
+                                <input type="file" id="badgeFile" name="badgeFile" accept="image/*" style="display: none;">
+                                <p class="text-xs text-gray-500 text-center mb-4">PNG or JPG, Max 5MB</p>
+                                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-all">
+                                    Upload Badge
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- School Basic Info -->
+                        <div class="lg:col-span-2 glass rounded-xl p-8 shadow-sm border border-gray-200">
+                            <h3 class="text-lg font-bold text-gray-800 mb-6">Basic Information</h3>
+                            <form id="schoolBasicForm" class="space-y-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">School Name</label>
+                                        <input type="text" id="schoolName" value="@schoolName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Registration Number</label>
+                                        <input type="text" id="regNumber" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Established Year</label>
+                                        <input type="number" id="establishedYear" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">School Motto</label>
+                                        <input type="text" id="schoolMotto" value="@schoolMotto" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full btn-primary text-white py-3 rounded-lg font-semibold mt-6 hover:shadow-lg">
+                                    Save Basic Information
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="glass rounded-xl p-8 shadow-sm border border-gray-200 mb-8">
+                        <h3 class="text-lg font-bold text-gray-800 mb-6">Contact Information</h3>
+                        <form id="contactForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                                <input type="email" id="schoolEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+                                <input type="tel" id="schoolPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Physical Address</label>
+                                <input type="text" id="schoolAddress" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Website</label>
+                                <input type="url" id="schoolWebsite" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <button type="submit" class="md:col-span-2 btn-primary text-white py-3 rounded-lg font-semibold hover:shadow-lg">
+                                Update Contact Information
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grades Section -->
+            <div id="grades-section" class="section hidden p-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-8">Grade Management</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="gradesContainer">
+                    <div class="text-center py-12 text-gray-500 col-span-full">Loading grades...</div>
+                </div>
+            </div>
+
+            <!-- Learners Section -->
+            <div id="learners-section" class="section hidden p-8">
+                <div class="mb-8 flex items-center justify-between">
+                    <h2 class="text-3xl font-bold text-gray-800">Student Management</h2>
+                    <button onclick="openModal('addLearner')" class="btn-primary text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg">
+                        <i class="fas fa-user-plus mr-2"></i> Enroll Student
+                    </button>
+                </div>
+
+                <div class="glass rounded-xl p-6 shadow-sm border border-gray-200 overflow-x-auto">
+                    <div class="mb-6 flex space-x-4">
+                        <input type="search" id="learnerSearch" placeholder="Search by name, admission number..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <select id="classFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Classes</option>
+                        </select>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr class="border-b-2 border-gray-200">
+                                <th class="text-left py-4 px-6 font-semibold text-gray-700">Name</th>
+                                <th class="text-left py-4 px-6 font-semibold text-gray-700">Admission No.</th>
+                                <th class="text-left py-4 px-6 font-semibold text-gray-700">Class</th>
+                                <th class="text-left py-4 px-6 font-semibold text-gray-700">Gender</th>
+                                <th class="text-left py-4 px-6 font-semibold text-gray-700">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="learnersTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center py-8 text-gray-500">Loading learners...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Staff & Credentials Section -->
+            <div id="staff-section" class="section hidden p-8">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">Staff Management & Credentials</h2>
+
+                    <div class="flex space-x-4 mb-8">
+                        <button id="staffTab" class="tab-button active text-gray-700 font-semibold pb-3 px-4">All Staff</button>
+                        <button id="credentialsTab" class="tab-button text-gray-700 font-semibold pb-3 px-4">Create Credentials</button>
+                    </div>
+
+                    <!-- Staff List -->
+                    <div id="staffContent" class="glass rounded-xl p-6 shadow-sm border border-gray-200">
+                        <div class="mb-6 flex items-center justify-between">
+                            <input type="search" id="staffSearch" placeholder="Search staff..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg mr-4">
+                            <button onclick="openModal('registerStaff')" class="btn-primary text-white px-6 py-2 rounded-lg font-medium">
+                                <i class="fas fa-user-plus mr-2"></i> Register Staff
+                            </button>
+                        </div>
+
+                        <table>
+                            <thead>
+                                <tr class="border-b-2 border-gray-200">
+                                    <th class="text-left py-4 px-6 font-semibold text-gray-700">Name</th>
+                                    <th class="text-left py-4 px-6 font-semibold text-gray-700">Email</th>
+                                    <th class="text-left py-4 px-6 font-semibold text-gray-700">Phone</th>
+                                    <th class="text-left py-4 px-6 font-semibold text-gray-700">Position</th>
+                                    <th class="text-left py-4 px-6 font-semibold text-gray-700">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="staffTableBody">
+                                <tr><td colspan="5" class="text-center py-8 text-gray-500">Loading staff...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Credentials Management -->
+                    <div id="credentialsContent" class="hidden glass rounded-xl p-8 shadow-sm border border-gray-200">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6">Create Staff Login Credentials</h3>
+                        <form id="credentialsForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Select Staff Member *</label>
+                                <select id="staffSelect" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Choose a staff member...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Assign Role *</label>
+                                <select id="roleSelect" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Select role...</option>
+                                    <option value="secretary">Secretary</option>
+                                    <option value="teacher">Teacher</option>
+                                    <option value="department_head">Department Head</option>
+                                    <option value="finance">Finance Officer</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Username *</label>
+                                <input type="text" id="username" required placeholder="e.g., john.doe" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Temporary Password *</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="tempPassword" required placeholder="Auto-generated or custom" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <button type="button" onclick="generatePassword()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-medium transition-all">
+                                        <i class="fas fa-redo"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Position</label>
+                                <input type="text" id="position" placeholder="e.g., Head Teacher" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Department</label>
+                                <input type="text" id="department" placeholder="e.g., Science, Arts" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <button type="submit" class="md:col-span-2 btn-primary text-white py-3 rounded-lg font-semibold hover:shadow-lg flex items-center justify-center">
+                                <i class="fas fa-key mr-2"></i> Create Credentials
+                            </button>
+                        </form>
+
+                        <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4">Recent Credentials Created</h3>
+                        <div class="overflow-x-auto">
+                            <table>
+                                <thead>
+                                    <tr class="border-b-2 border-gray-200">
+                                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Staff Name</th>
+                                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Username</th>
+                                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Role</th>
+                                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Created</th>
+                                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="credentialsHistoryBody">
+                                    <tr><td colspan="5" class="text-center py-8 text-gray-500">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Finances Section -->
+            <div id="finances-section" class="section hidden p-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-8">Financial Management</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="glass rounded-xl p-6 shadow-sm border border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2">Total Revenue</p>
+                        <p class="text-3xl font-bold text-green-600" id="financeRevenue">KES 0</p>
+                        <p class="text-xs text-gray-500 mt-2">This term</p>
+                    </div>
+                    <div class="glass rounded-xl p-6 shadow-sm border border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2">Outstanding Fees</p>
+                        <p class="text-3xl font-bold text-red-600" id="financeOutstanding">KES 0</p>
+                        <p class="text-xs text-gray-500 mt-2">From active learners</p>
+                    </div>
+                    <div class="glass rounded-xl p-6 shadow-sm border border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2">Collection Rate</p>
+                        <p class="text-3xl font-bold text-blue-600" id="financeRate">0%</p>
+                        <p class="text-xs text-gray-500 mt-2">Overall performance</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Staff Modal -->
+    <div id="registerStaffModal" class="modal">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 text-white flex items-center justify-between">
+                <h2 class="text-2xl font-bold">Register Staff Member</h2>
+                <button onclick="closeModal('registerStaff')" class="hover:bg-white hover:bg-opacity-20 w-10 h-10 rounded-full flex items-center justify-center transition-all">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="p-8">
+                <form id="registerStaffForm" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
+                        <input type="text" id="staffFullName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+                        <input type="email" id="staffEmail" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+                        <input type="tel" id="staffPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Position *</label>
+                        <input type="text" id="staffPosition" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., Teacher, Secretary">
+                    </div>
+                    <div class="flex gap-4">
+                        <button type="submit" class="flex-1 btn-primary text-white py-3 rounded-lg font-semibold hover:shadow-lg">Register Staff</button>
+                        <button type="button" onclick="closeModal('registerStaff')" class="px-6 bg-gray-300 hover:bg-gray-400 text-gray-800 py-3 rounded-lg font-semibold transition-all">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Learner Modal -->
+    <div id="addLearnerModal" class="modal">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden">
+            <div class="bg-gradient-to-r from-green-600 to-green-700 px-8 py-6 text-white flex items-center justify-between">
+                <h2 class="text-2xl font-bold">Enroll Student</h2>
+                <button onclick="closeModal('addLearner')" class="hover:bg-white hover:bg-opacity-20 w-10 h-10 rounded-full flex items-center justify-center transition-all">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="p-8">
+                <form id="addLearnerForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
+                            <input type="text" id="learnerFullName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Date of Birth *</label>
+                            <input type="date" id="learnerDOB" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Class/Form *</label>
+                            <select id="learnerClass" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <option value="">Select class...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Gender *</label>
+                            <select id="learnerGender" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <option value="">Select gender...</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Parent/Guardian Email</label>
+                        <input type="email" id="guardianEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    <div class="flex gap-4">
+                        <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-all">Enroll Student</button>
+                        <button type="button" onclick="closeModal('addLearner')" class="px-6 bg-gray-300 hover:bg-gray-400 text-gray-800 py-3 rounded-lg font-semibold transition-all">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const schoolName = '@Html.Raw(Context.Request.RouteValues["schoolName"])';
+
+        // Smart Alert System
+        function showAlert(message, type = 'info') {
+            const alert = document.createElement('div');
+            alert.className = `smart-alert ${type}`;
+            
+            const icon = type === 'success' ? 'fa-check-circle' : 
+                        type === 'error' ? 'fa-exclamation-circle' : 
+                        type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+            
+            alert.innerHTML = `
+                <i class="fas ${icon} text-2xl"></i>
+                <div class="flex-1">
+                    <p class="font-semibold">${message}</p>
+                </div>
+                <button onclick="this.parentElement.classList.add('hiding'); setTimeout(() => this.parentElement.remove(), 300)" class="hover:bg-white hover:bg-opacity-20 w-8 h-8 rounded-full flex items-center justify-center transition-all">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.classList.add('hiding');
+                setTimeout(() => alert.remove(), 300);
+            }, 5000);
+        }
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(sectionId + '-section').classList.remove('hidden');
+            
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.target.closest('.nav-item').classList.add('active');
+        }
+
+        // Modal Management
+        function openModal(modalName) {
+            document.getElementById(modalName + 'Modal').classList.add('active');
+        }
+
+        function closeModal(modalName) {
+            document.getElementById(modalName + 'Modal').classList.remove('active');
+        }
+
+        // Generate Password
+        function generatePassword() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let password = '';
+            for (let i = 0; i < 12; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('tempPassword').value = password;
+        }
+
+        // Load data on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadSchoolConfig();
+            await loadDashboardStats();
+            await loadRecentAdmissions();
+            await loadGrades();
+            await loadLearners();
+            await loadStaff();
+            await loadStaffForCredentials();
+            await loadCredentialsHistory();
+            await loadFinances();
+        });
+
+        // Load School Configuration
+        async function loadSchoolConfig() {
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/school-config`);
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    const config = data.data;
+                    document.getElementById('schoolName').value = config.schoolName || '';
+                    document.getElementById('schoolMotto').value = config.schoolMotto || '';
+                    document.getElementById('regNumber').value = config.registrationNumber || '';
+                    document.getElementById('establishedYear').value = config.establishedYear || '';
+                    
+                    if (config.badgeUrl) {
+                        const badgeImg = document.getElementById('badgeImg');
+                        const placeholder = document.getElementById('badgePlaceholder');
+                        badgeImg.src = config.badgeUrl;
+                        badgeImg.style.display = 'block';
+                        if (placeholder) placeholder.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading school config:', error);
+            }
+        }
+
+        // Load Grades
+        async function loadGrades() {
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/grades`);
+                const data = await response.json();
+
+                if (data.success && data.grades) {
+                    displayGrades(data.grades);
+                    // Populate class filter
+                    const classFilter = document.getElementById('classFilter');
+                    const learnerClass = document.getElementById('learnerClass');
+                    data.grades.forEach(grade => {
+                        classFilter.innerHTML += `<option value="${grade.gradeName}">${grade.gradeName}</option>`;
+                        learnerClass.innerHTML += `<option value="${grade.gradeName}">${grade.gradeName}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading grades:', error);
+            }
+        }
+
+        // Display Grades
+        function displayGrades(grades) {
+            const container = document.getElementById('gradesContainer');
+            if (grades.length === 0) {
+                container.innerHTML = '<div class="text-center py-12 text-gray-500 col-span-full">No grades configured yet</div>';
+                return;
+            }
+
+            container.innerHTML = grades.map(grade => `
+                <div class="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-all cursor-pointer" onclick="viewLearnersByGrade('${grade.gradeName}')">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-xl font-bold text-gray-800">${grade.gradeName}</h4>
+                        <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">
+                            <i class="fas fa-eye mr-1"></i> View
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3 mb-4">
+                        <div class="bg-green-50 rounded-lg p-3">
+                            <p class="text-xs text-gray-600 mb-1">Term 1</p>
+                            <p class="text-lg font-bold text-green-600">KES ${formatNumber(grade.term1Fee)}</p>
+                        </div>
+                        <div class="bg-blue-50 rounded-lg p-3">
+                            <p class="text-xs text-gray-600 mb-1">Term 2</p>
+                            <p class="text-lg font-bold text-blue-600">KES ${formatNumber(grade.term2Fee)}</p>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-3">
+                            <p class="text-xs text-gray-600 mb-1">Term 3</p>
+                            <p class="text-lg font-bold text-purple-600">KES ${formatNumber(grade.term3Fee)}</p>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-200 pt-3">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Streams:</p>
+                        <div class="flex flex-wrap gap-2">
+                            ${grade.streams && grade.streams.length > 0 ? grade.streams.map(stream => `
+                                <span class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold">
+                                    ${stream}
+                                </span>
+                            `).join('') : '<span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs">No Streams</span>'}
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-200">
+                        <p class="text-sm font-semibold text-gray-500">Annual Fee: <span class="text-gray-800">KES ${formatNumber(grade.totalFees)}</span></p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // View Learners by Grade
+        async function viewLearnersByGrade(gradeName) {
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/learners/by-grade/${gradeName}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    showLearnersByGradeModal(gradeName, data.learners);
+                }
+            } catch (error) {
+                showAlert('Error loading learners: ' + error.message, 'error');
+            }
+        }
+
+        // Show Learners by Grade Modal
+        function showLearnersByGradeModal(gradeName, learners) {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 text-white flex items-center justify-between sticky top-0">
+                        <div>
+                            <h2 class="text-2xl font-bold">Learners in ${gradeName}</h2>
+                            <p class="text-sm opacity-90">${learners.length} student(s) found</p>
+                        </div>
+                        <button onclick="this.closest('.modal').remove()" class="hover:bg-white hover:bg-opacity-20 w-10 h-10 rounded-full flex items-center justify-center transition-all">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+
+                    <div class="p-8">
+                        ${learners.length === 0 ? 
+                            '<div class="text-center py-12"><i class="fas fa-users text-6xl text-gray-300 mb-4"></i><p class="text-gray-500">No learners in this grade</p></div>' 
+                            : 
+                            `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                ${learners.map(learner => `
+                                    <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all">
+                                        <div class="flex items-start justify-between mb-3">
+                                            <div class="flex items-center space-x-3">
+                                                <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
+                                                    ${learner.fullName.substring(0, 2).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <p class="font-bold text-gray-800">${learner.fullName}</p>
+                                                    <p class="text-sm text-gray-500">${learner.admissionNo}</p>
+                                                </div>
+                                            </div>
+                                            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                                                ${learner.status}
+                                            </span>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3 text-sm">
+                                            <div>
+                                                <p class="text-gray-500">Stream</p>
+                                                <p class="font-semibold text-gray-800">${learner.stream}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-gray-500">Gender</p>
+                                                <p class="font-semibold text-gray-800">${learner.gender}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>`
+                        }
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+        }
+
+        // Load Dashboard Stats
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/dashboard-stats`);
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('totalLearners').textContent = data.data.totalLearners || 0;
+                    document.getElementById('totalStaff').textContent = data.data.totalStaff || 0;
+                    document.getElementById('totalRevenue').textContent = 'KES ' + formatNumber(data.data.totalRevenue || 0);
+                    document.getElementById('outstandingFees').textContent = 'KES ' + formatNumber(data.data.outstandingFees || 0);
+                    
+                    document.getElementById('totalLearnersHero').textContent = data.data.totalLearners || 0;
+                    document.getElementById('totalStaffHero').textContent = data.data.totalStaff || 0;
+                    document.getElementById('totalRevenueHero').textContent = 'KES ' + formatNumber(data.data.totalRevenue || 0);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            }
+        }
+
+        // Load Recent Admissions
+        async function loadRecentAdmissions() {
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/recent-admissions`);
+                const data = await response.json();
+
+                if (data.success && data.admissions) {
+                    const container = document.getElementById('recentAdmissionsContainer');
+                    if (data.admissions.length === 0) {
+                        container.innerHTML = '<div class="text-center py-8 text-gray-500">No recent admissions</div>';
+                        return;
+                    }
+
+                    container.innerHTML = data.admissions.map(admission => `
+                        <div class="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-all">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
+                                    ${admission.fullName.substring(0, 2).toUpperCase()}
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">${admission.fullName}</p>
+                                    <p class="text-sm text-gray-500">${admission.grade} - ${admission.accountNo}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500">${new Date(admission.admissionDate).toLocaleDateString()}</p>
+                                <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">New</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading recent admissions:', error);
+            }
+        }
+
+        // Load Learners
+        async function loadLearners() {
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/learners`);
+                const data = await response.json();
+
+                if (data.success && data.learners) {
+                    displayLearners(data.learners);
+                }
+            } catch (error) {
+                console.error('Error loading learners:', error);
+                document.getElementById('learnersTableBody').innerHTML = '<tr><td colspan="5" class="text-center py-8 text-red-500">Error loading learners</td></tr>';
+            }
+        }
+
+        // Display Learners
+        function displayLearners(learners) {
+            const tbody = document.getElementById('learnersTableBody');
+            if (learners.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">No learners found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = learners.map(learner => `
+                <tr class="hover:bg-gray-50">
+                    <td class="py-4 px-6">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                ${learner.fullName.substring(0, 2).toUpperCase()}
+                            </div>
+                            <span class="font-medium text-gray-800">${learner.fullName}</span>
+                        </div>
+                    </td>
+                    <td class="py-4 px-6 text-gray-600">${learner.admissionNo}</td>
+                    <td class="py-4 px-6">
+                        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                            ${learner.class} ${learner.stream !== 'General' ? '- ' + learner.stream : ''}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6 text-gray-600">${learner.gender}</td>
+                    <td class="py-4 px-6">
+                        <span class="px-3 py-1 ${learner.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'} rounded-full text-xs font-semibold">
+                            ${learner.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Add search and filter functionality
+            setupLearnerFilters(learners);
+        }
+
+        // Setup Learner Filters
+        function setupLearnerFilters(allLearners) {
+            const searchInput = document.getElementById('learnerSearch');
+            const classFilter = document.getElementById('classFilter');
+
+            function filterLearners() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedClass = classFilter.value;
+
+                const filtered = allLearners.filter(learner => {
+                    const matchesSearch = learner.fullName.toLowerCase().includes(searchTerm) || 
+                                        learner.admissionNo.toLowerCase().includes(searchTerm);
+                    const matchesClass = !selectedClass || learner.class === selectedClass;
+                    return matchesSearch && matchesClass;
+                });
+
+                displayLearners(filtered);
+            }
+
+            searchInput.addEventListener('input', filterLearners);
+            classFilter.addEventListener('change', filterLearners);
+        }
+
+        // Load Staff
+        async function loadStaff() {
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/staff`);
+                const data = await response.json();
+
+                if (data.success && data.staff) {
+                    displayStaff(data.staff);
+                }
+            } catch (error) {
+                console.error('Error loading staff:', error);
+                document.getElementById('staffTableBody').innerHTML = '<tr><td colspan="5" class="text-center py-8 text-red-500">Error loading staff</td></tr>';
+            }
+        }
+
+        // Display Staff
+        function displayStaff(staff) {
+            const tbody = document.getElementById('staffTableBody');
+            if (staff.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">No staff members found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = staff.map(member => `
+                <tr class="hover:bg-gray-50">
+                    <td class="py-4 px-6">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                ${member.fullName.substring(0, 2).toUpperCase()}
+                            </div>
+                            <span class="font-medium text-gray-800">${member.fullName}</span>
+                        </div>
+                    </td>
+                    <td class="py-4 px-6 text-gray-600">${member.email}</td>
+                    <td class="py-4 px-6 text-gray-600">${member.phone || 'N/A'}</td>
+                    <td class="py-4 px-6">
+                        <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-semibold">
+                            ${member.position}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6">
+                        <span class="px-3 py-1 ${member.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} rounded-full text-xs font-semibold">
+                            ${member.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Setup staff search
+            const searchInput = document.getElementById('staffSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const filtered = staff.filter(member => 
+                        member.fullName.toLowerCase().includes(searchTerm) ||
+                        member.email.toLowerCase().includes(searchTerm) ||
+                        member.position.toLowerCase().includes(searchTerm)
+                    );
+                    displayStaff(filtered);
+                });
+            }
+        }
+
+        // Load Staff for Credentials
+        async function loadStaffForCredentials() {
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/staff`);
+                const data = await response.json();
+
+                if (data.success && data.staff) {
+                    const select = document.getElementById('staffSelect');
+                    select.innerHTML = '<option value="">Choose a staff member...</option>' + 
+                        data.staff.map(staff => `<option value="${staff.id}">${staff.fullName} - ${staff.position}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading staff for credentials:', error);
+            }
+        }
+
+        // Load Credentials History
+        async function loadCredentialsHistory() {
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/credentials/history`);
+                const data = await response.json();
+
+                if (data.success && data.credentials) {
+                    const tbody = document.getElementById('credentialsHistoryBody');
+                    if (data.credentials.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">No credentials created yet</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = data.credentials.map(cred => `
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-4 px-6 font-medium text-gray-800">${cred.staffName}</td>
+                            <td class="py-4 px-6 text-gray-600">${cred.username}</td>
+                            <td class="py-4 px-6">
+                                <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">
+                                    ${cred.role}
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-gray-600 text-sm">${new Date(cred.createdDate).toLocaleDateString()}</td>
+                            <td class="py-4 px-6">
+                                <span class="px-3 py-1 ${cred.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} rounded-full text-xs font-semibold">
+                                    ${cred.isActive ? 'Active' : 'Inactive'}
+                                </span>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading credentials history:', error);
+            }
+        }
+
+        // Load Finances
+        async function loadFinances() {
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/finances`);
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    document.getElementById('financeRevenue').textContent = 'KES ' + formatNumber(data.data.totalRevenue || 0);
+                    document.getElementById('financeOutstanding').textContent = 'KES ' + formatNumber(data.data.outstandingFees || 0);
+                    document.getElementById('financeRate').textContent = Math.round(data.data.collectionRate || 0) + '%';
+                }
+            } catch (error) {
+                console.error('Error loading finances:', error);
+            }
+        }
+
+        // Format Number
+        function formatNumber(num) {
+            return new Intl.NumberFormat('en-KE').format(num);
+        }
+
+        // Close modals on outside click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
+        // Register Staff Form
+        document.getElementById('registerStaffForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                fullName: document.getElementById('staffFullName').value,
+                email: document.getElementById('staffEmail').value,
+                phone: document.getElementById('staffPhone').value,
+                position: document.getElementById('staffPosition').value
+            };
+
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/staff/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showAlert('Staff registered successfully! You can now create login credentials.', 'success');
+                    closeModal('registerStaff');
+                    document.getElementById('registerStaffForm').reset();
+                    await loadStaff();
+                    await loadStaffForCredentials();
+                } else {
+                    showAlert(data.message || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        });
+
+        // Enroll Learner Form
+        document.getElementById('addLearnerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                fullName: document.getElementById('learnerFullName').value,
+                dateOfBirth: document.getElementById('learnerDOB').value,
+                class: document.getElementById('learnerClass').value,
+                gender: document.getElementById('learnerGender').value,
+                guardianEmail: document.getElementById('guardianEmail').value
+            };
+
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/learners/enroll`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showAlert(`Student enrolled successfully! Admission No: ${data.admissionNo}`, 'success');
+                    closeModal('addLearner');
+                    document.getElementById('addLearnerForm').reset();
+                    await loadDashboardStats();
+                    await loadRecentAdmissions();
+                    await loadLearners();
+                } else {
+                    showAlert(data.message || 'Enrollment failed', 'error');
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        });
+
+        // Credentials Form
+        document.getElementById('credentialsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                staffId: parseInt(document.getElementById('staffSelect').value),
+                role: document.getElementById('roleSelect').value,
+                username: document.getElementById('username').value,
+                tempPassword: document.getElementById('tempPassword').value,
+                position: document.getElementById('position').value,
+                department: document.getElementById('department').value
+            };
+
+            if (!formData.staffId) {
+                showAlert('Please select a staff member', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/credentials/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showAlert('Credentials created successfully! Staff can now login.', 'success');
+                    document.getElementById('credentialsForm').reset();
+                    await loadCredentialsHistory();
+                } else {
+                    showAlert(data.message || 'Failed to create credentials', 'error');
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        });
+
+        // Badge Upload Form
+        document.getElementById('badgeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('badgeFile');
+            if (!fileInput.files.length) {
+                showAlert('Please select a file', 'warning');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('badge', fileInput.files[0]);
+
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/school/upload-badge`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    const badgeImg = document.getElementById('badgeImg');
+                    const placeholder = document.getElementById('badgePlaceholder');
+                    badgeImg.src = data.badgeUrl + '?t=' + new Date().getTime();
+                    badgeImg.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+                    showAlert('Badge uploaded successfully!', 'success');
+                } else {
+                    showAlert(data.message || 'Upload failed', 'error');
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        });
+
+        // Badge File Preview
+        document.getElementById('badgeFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (!file.type.startsWith('image/')) {
+                    showAlert('Please select an image file', 'warning');
+                    this.value = '';
+                    return;
+                }
+
+                if (file.size > 5 * 1024 * 1024) {
+                    showAlert('File size must be less than 5MB', 'warning');
+                    this.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const badgeImg = document.getElementById('badgeImg');
+                    const placeholder = document.getElementById('badgePlaceholder');
+                    badgeImg.src = e.target.result;
+                    badgeImg.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // School Basic Info Form
+        document.getElementById('schoolBasicForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                schoolName: document.getElementById('schoolName').value,
+                registrationNumber: document.getElementById('regNumber').value,
+                establishedYear: parseInt(document.getElementById('establishedYear').value) || null,
+                schoolMotto: document.getElementById('schoolMotto').value
+            };
+
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/school/update-info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showAlert('School information updated successfully!', 'success');
+                } else {
+                    showAlert(data.message || 'Update failed', 'error');
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        });
+
+        // Contact Form
+        document.getElementById('contactForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                email: document.getElementById('schoolEmail').value,
+                phone: document.getElementById('schoolPhone').value,
+                address: document.getElementById('schoolAddress').value,
+                website: document.getElementById('schoolWebsite').value
+            };
+
+            try {
+                const response = await fetch(`/${schoolName}/principal/api/school/update-contact`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showAlert('Contact information updated successfully!', 'success');
+                } else {
+                    showAlert(data.message || 'Update failed', 'error');
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        });
+
+        // Tab navigation
+        document.getElementById('staffTab').addEventListener('click', () => {
+            document.getElementById('staffContent').classList.remove('hidden');
+            document.getElementById('credentialsContent').classList.add('hidden');
+            document.getElementById('staffTab').classList.add('active');
+            document.getElementById('credentialsTab').classList.remove('active');
+        });
+
+        document.getElementById('credentialsTab').addEventListener('click', () => {
+            document.getElementById('staffContent').classList.add('hidden');
+            document.getElementById('credentialsContent').classList.remove('hidden');
+            document.getElementById('staffTab').classList.remove('active');
+            document.getElementById('credentialsTab').classList.add('active');
+        });
+    </script>
+</body>
+</html>

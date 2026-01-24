@@ -1,0 +1,533 @@
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Platform Access - EduTrack</title>
+    <meta name="robots" content="noindex, nofollow" />
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #020617;
+            --surface: #0F172A;
+            --border: #1E293B;
+            --primary: #3B82F6;
+            --success: #10B981;
+            --danger: #EF4444;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated Background */
+        .bg-pattern {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: moveGrid 20s linear infinite;
+        }
+
+        @@keyframes moveGrid {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .bg-gradient {
+            position: absolute;
+            top: -50%;
+            right: -30%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @@keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        /* Login Container */
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 460px;
+            padding: 20px;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Card */
+        .login-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+        }
+
+        /* Header */
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .lock-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            border: 2px solid var(--danger);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            animation: iconFloat 3s ease-in-out infinite;
+        }
+
+        @@keyframes iconFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .lock-icon .material-icons-round {
+            font-size: 42px;
+            color: var(--danger);
+        }
+
+        .login-header h2 {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .login-header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Warning Badge */
+        .warning-badge {
+            background: rgba(239, 68, 68, 0.15);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.85rem;
+            color: #FCA5A5;
+        }
+
+        .warning-badge .material-icons-round {
+            color: var(--danger);
+            font-size: 20px;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 20px;
+            pointer-events: none;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.05);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        /* Password Toggle */
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.3s;
+            font-size: 20px;
+        }
+
+        .toggle-password:hover {
+            color: var(--text-main);
+        }
+
+        /* Error Alert */
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: shake 0.5s ease;
+        }
+
+        @@keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .alert-error .material-icons-round {
+            color: var(--danger);
+            font-size: 24px;
+        }
+
+        .alert-error-content {
+            flex: 1;
+        }
+
+        .alert-error-content strong {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 2px;
+            color: #FCA5A5;
+        }
+
+        .alert-error-content span {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--danger), #DC2626);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(239, 68, 68, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .submit-btn.loading {
+            pointer-events: none;
+        }
+
+        .submit-btn.loading .btn-text {
+            display: none;
+        }
+
+        .submit-btn.loading .loader {
+            display: block;
+        }
+
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        .login-footer {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 2px solid var(--border);
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .login-footer p {
+            margin-bottom: 8px;
+        }
+
+        .login-footer .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 8px;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .login-card {
+                padding: 36px 24px;
+            }
+
+            .login-header h2 {
+                font-size: 1.6rem;
+            }
+
+            .lock-icon {
+                width: 64px;
+                height: 64px;
+            }
+
+            .lock-icon .material-icons-round {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Effects -->
+    <div class="bg-pattern"></div>
+    <div class="bg-gradient"></div>
+
+    <!-- Login Container -->
+    <div class="login-container">
+        <div class="login-card">
+            
+            <!-- Header -->
+            <div class="login-header">
+                <div class="lock-icon">
+                    <span class="material-icons-round">admin_panel_settings</span>
+                </div>
+                <h2>Platform Access</h2>
+                <p>Administrative Control Panel</p>
+            </div>
+
+            <!-- Warning Badge -->
+            <div class="warning-badge">
+                <span class="material-icons-round">shield</span>
+                <div>Restricted area. Authorized personnel only.</div>
+            </div>
+
+            <!-- Form -->
+            <form method="post" id="loginForm">
+                
+                <!-- Error Alert -->
+                @if (ViewData["Error"] != null)
+                {
+                    <div class="alert-error">
+                        <span class="material-icons-round">error</span>
+                        <div class="alert-error-content">
+                            <strong>Access Denied</strong>
+                            <span>@ViewData["Error"]</span>
+                        </div>
+                    </div>
+                }
+
+                <!-- Email Field -->
+                <div class="form-group">
+                    <label for="emailInput">Email Address</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon material-icons-round">email</span>
+                        <input 
+                            type="email" 
+                            id="emailInput" 
+                            name="email" 
+                            placeholder="admin@edutrack.com" 
+                            required 
+                            autocomplete="email"
+                            autofocus />
+                    </div>
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-group">
+                    <label for="passwordInput">Password</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon material-icons-round">lock</span>
+                        <input 
+                            type="password" 
+                            id="passwordInput" 
+                            name="password" 
+                            placeholder="Enter secure password" 
+                            required 
+                            autocomplete="current-password" />
+                        <span class="toggle-password material-icons-round" onclick="togglePassword()">visibility</span>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span class="btn-text">
+                        <span class="material-icons-round" style="font-size: 20px; vertical-align: middle;">lock_open</span>
+                        Enter Platform
+                    </span>
+                    <div class="loader"></div>
+                </button>
+
+            </form>
+
+            <!-- Footer -->
+            <div class="login-footer">
+                <p>All access attempts are logged and monitored</p>
+                <div class="security-badge">
+                    <span class="material-icons-round" style="font-size: 16px;">verified_user</span>
+                    256-bit Encryption
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Toggle Password Visibility
+        function togglePassword() {
+            const input = document.getElementById('passwordInput');
+            const icon = document.querySelector('.toggle-password');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility_off';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility';
+            }
+        }
+
+        // Form Submit Loading State
+        document.getElementById('loginForm').addEventListener('submit', function() {
+            const btn = document.getElementById('submitBtn');
+            btn.classList.add('loading');
+        });
+
+        // Auto-focus on error
+        @if (ViewData["Error"] != null)
+        {
+            <text>
+            document.addEventListener('DOMContentLoaded', function() {
+                document.getElementById('emailInput').focus();
+            });
+            </text>
+        }
+    </script>
+
+</body>
+</html>

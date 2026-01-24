@@ -1,0 +1,646 @@
+@{
+    Layout = null;
+    var schoolName = (ViewData["SchoolName"]?.ToString() ?? "Academy");
+    
+    schoolName = char.ToUpper(schoolName[0]) + schoolName.Substring(1);
+    var user = (ViewData["User"]?.ToString() ?? "Admin");
+    var tenantSubdomain = Context.Session.GetString("tenant");
+    
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@schoolName - Admin Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0F172A;
+            --accent: #3B82F6;
+            --accent-hover: #2563EB;
+            --purple: #8B5CF6;
+            --emerald: #10B981;
+            --amber: #F59E0B;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #000;
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Animated Background */
+        .bg-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-gradient {
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse at top left, rgba(59, 130, 246, 0.15), transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(139, 92, 246, 0.15), transparent 50%),
+                linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #334155 100%);
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @@keyframes gradientShift {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+            background-size: 100px 100px;
+            animation: gridMove 20s linear infinite;
+            opacity: 0.3;
+        }
+
+        @@keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(100px, 100px); }
+        }
+
+        #particlesCanvas {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        /* Main Layout */
+        .dashboard-container {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .top-bar {
+            padding: 20px 48px;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .brand-logo .material-icons-round {
+            font-size: 26px;
+            color: white;
+        }
+
+        .brand-text h1 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text-main), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--purple), var(--accent));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .user-details span {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .user-details strong {
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            animation: fadeInUp 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @@keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .welcome-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: iconFloat 3s ease-in-out infinite;
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
+        }
+
+        .welcome-icon .material-icons-round {
+            font-size: 42px;
+            color: var(--accent);
+        }
+
+        @@keyframes iconFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .welcome-section h2 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--text-main), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .welcome-section p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Role Cards */
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        .role-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px);
+            border: 2px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px 32px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .role-card::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 24px;
+            padding: 2px;
+            background: linear-gradient(135deg, transparent, transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .role-card.principal::before {
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+        }
+
+        .role-card.secretary::before {
+            background: linear-gradient(135deg, var(--emerald), var(--accent));
+        }
+
+        .role-card.admission::before {
+            background: linear-gradient(135deg, var(--amber), var(--accent));
+        }
+
+        .role-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border-color: transparent;
+        }
+
+        .role-card:hover::before {
+            opacity: 1;
+        }
+
+        .role-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 20px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .role-card.principal .role-icon {
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+        }
+
+        .role-card.secretary .role-icon {
+            background: linear-gradient(135deg, var(--emerald), #14B8A6);
+        }
+
+        .role-card.admission .role-icon {
+            background: linear-gradient(135deg, var(--amber), #F97316);
+        }
+
+        .role-card:hover .role-icon {
+            transform: scale(1.15) rotate(5deg);
+            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5);
+        }
+
+        .role-icon .material-icons-round {
+            font-size: 36px;
+            color: white;
+        }
+
+        .role-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .role-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .role-arrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent);
+            transition: all 0.3s;
+        }
+
+        .role-card:hover .role-arrow {
+            gap: 12px;
+        }
+
+        .role-arrow .material-icons-round {
+            font-size: 18px;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            margin-top: 60px;
+            display: flex;
+            gap: 24px;
+            padding: 24px 32px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-icon .material-icons-round {
+            font-size: 20px;
+            color: var(--accent);
+        }
+
+        .stat-content span {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .stat-content strong {
+            font-size: 1.1rem;
+            color: var(--text-main);
+        }
+
+        /* Responsive */
+        @@media (max-width: 992px) {
+            .roles-grid {
+                grid-template-columns: 1fr;
+                max-width: 450px;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .top-bar {
+                padding: 16px 24px;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .welcome-section h2 {
+                font-size: 2rem;
+            }
+
+            .main-content {
+                padding: 40px 20px;
+            }
+
+            .role-card {
+                padding: 32px 24px;
+            }
+        }
+
+        @@media (max-width: 576px) {
+            .brand-text h1 {
+                font-size: 1.1rem;
+            }
+
+            .user-details {
+                display: none;
+            }
+
+            .welcome-section h2 {
+                font-size: 1.6rem;
+            }
+
+            .welcome-section p {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-wrapper">
+        <div class="bg-gradient"></div>
+        <div class="bg-grid"></div>
+        <canvas id="particlesCanvas"></canvas>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="top-bar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <span class="material-icons-round">school</span>
+                </div>
+                <div class="brand-text">
+                    <h1>@schoolName</h1>
+                    <p>Administrative Portal</p>
+                </div>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">@user.Substring(0, 1).ToUpper()</div>
+                <div class="user-details">
+                    <span>Logged in as</span>
+                    <strong>@user</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="welcome-section">
+                <div class="welcome-icon">
+                    <span class="material-icons-round">admin_panel_settings</span>
+                </div>
+                <h2>Administrative Dashboard</h2>
+                <p>Select your role to access the appropriate management tools and resources</p>
+            </div>
+
+            <div class="roles-grid">
+                <!-- Principal -->
+                <a href="@($"/{tenantSubdomain}/principal")" class="role-card principal">
+                    <div class="role-icon">
+                        <span class="material-icons-round">person</span>
+                    </div>
+                    <h3>Principal</h3>
+                    <p>Access school-wide management, reports, and strategic oversight tools</p>
+                    <div class="role-arrow">
+                        Access Portal
+                        <span class="material-icons-round">arrow_forward</span>
+                    </div>
+                </a>
+
+                <!-- Secretary -->
+                <a href="@($"/{tenantSubdomain}/secretary")" class="role-card secretary">
+                    <div class="role-icon">
+                        <span class="material-icons-round">article</span>
+                    </div>
+                    <h3>Secretary</h3>
+                    <p>Manage documentation, records, scheduling, and administrative tasks</p>
+                    <div class="role-arrow">
+                        Access Portal
+                        <span class="material-icons-round">arrow_forward</span>
+                    </div>
+                </a>
+
+<!-- Admission Officer -->
+<a href="@($"/{tenantSubdomain}/admission")" class="role-card admission">
+    <div class="role-icon">
+        <span class="material-icons-round">how_to_reg</span>
+    </div>
+    <h3>Admission Officer</h3>
+    <p>Process applications, manage enrollments, and handle admission workflows</p>
+    <div class="role-arrow">
+        Access Portal
+        <span class="material-icons-round">arrow_forward</span>
+    </div>
+</a>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <span class="material-icons-round">verified</span>
+                    </div>
+                    <div class="stat-content">
+                        <span>System Status</span>
+                        <strong>All Systems Operational</strong>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <span class="material-icons-round">schedule</span>
+                    </div>
+                    <div class="stat-content">
+                        <span>Last Login</span>
+                        <strong>@DateTime.Now.ToString("MMM dd, yyyy")</strong>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <span class="material-icons-round">security</span>
+                    </div>
+                    <div class="stat-content">
+                        <span>Security</span>
+                        <strong>Protected</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* Particle System */
+        const canvas = document.getElementById('particlesCanvas');
+        const ctx = canvas.getContext('2d');
+        let w = canvas.width = window.innerWidth;
+        let h = canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 80;
+
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = random(0, w);
+                this.y = random(0, h);
+                this.size = random(1, 3);
+                this.speedX = random(-0.3, 0.3);
+                this.speedY = random(-0.4, 0.4);
+                this.color = `rgba(59, 130, 246, ${random(0.2, 0.5)})`;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x > w) this.x = 0;
+                if (this.x < 0) this.x = w;
+                if (this.y > h) this.y = 0;
+                if (this.y < 0) this.y = h;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, w, h);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>

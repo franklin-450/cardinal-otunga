@@ -1,0 +1,1178 @@
+@model LoginViewModel
+@{
+    Layout = null;
+    var schoolName = (ViewData["SchoolName"]?.ToString() ?? "Academy");
+    schoolName = char.ToUpper(schoolName[0]) + schoolName.Substring(1); 
+    ViewData["Title"] = $"{schoolName} | Faculty & Student Portal";
+}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0F172A;
+            --accent: #3B82F6;
+            --accent-hover: #2563EB;
+            --accent-light: #60A5FA;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --font-fam: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { 
+            height: 100%; 
+            font-family: var(--font-fam); 
+            background: #000; 
+            color: var(--text-main); 
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* Enhanced Background with Layering */
+        .bg-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&q=80&w=2070&auto=format&fit=crop') center/cover no-repeat;
+            animation: zoomPan 30s infinite alternate ease-in-out;
+            filter: brightness(0.8) contrast(1.1);
+            z-index: 1;
+        }
+
+        .bg-overlay {
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse at top right, rgba(59, 130, 246, 0.15), transparent 60%),
+                radial-gradient(ellipse at bottom left, rgba(147, 51, 234, 0.1), transparent 60%),
+                linear-gradient(135deg, rgba(15,23,42, 0.85) 0%, rgba(30,58,138, 0.75) 100%);
+            backdrop-filter: blur(12px);
+            z-index: 2;
+        }
+
+        #particlesCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        /* Enhanced Animations */
+        @@keyframes zoomPan {
+            0% { transform: scale(1) translate(0,0); }
+            33% { transform: scale(1.08) translate(-15px, 10px); }
+            66% { transform: scale(1.12) translate(20px, -5px); }
+            100% { transform: scale(1.05) translate(-10px, -10px); }
+        }
+
+        .main-layout {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Premium Header */
+        .system-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 48px;
+            background: rgba(15,23,42,0.5);
+            backdrop-filter: blur(24px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(59,130,246,0.5), 0 0 40px rgba(59,130,246,0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .brand-logo::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            background: linear-gradient(45deg, var(--accent), var(--accent-light));
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.4s;
+            z-index: -1;
+            filter: blur(8px);
+        }
+
+        .brand-logo:hover {
+            transform: translateY(-3px) scale(1.05);
+        }
+
+        .brand-logo:hover::before {
+            opacity: 0.7;
+        }
+
+        .brand-logo .material-icons-round {
+            font-size: 26px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .school-name {
+            font-weight: 800;
+            font-size: 1.25rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text-main) 0%, var(--accent-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .system-name {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(16,185,129,0.12);
+            padding: 8px 16px;
+            border-radius: 24px;
+            border: 1px solid rgba(16,185,129,0.3);
+            transition: all 0.3s;
+        }
+
+        .system-status:hover {
+            background: rgba(16,185,129,0.18);
+            transform: scale(1.02);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--success);
+            animation: statusPulse 2s ease-in-out infinite;
+        }
+
+        .status-text {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        @@keyframes statusPulse {
+            0%, 100% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* Premium Login Card */
+        .login-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px 40px;
+            animation: fadeInUp 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @@keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 480px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            padding: 48px;
+            box-shadow: 
+                0 40px 80px -20px rgba(0,0,0,0.8),
+                0 0 100px rgba(59,130,246,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated Border Glow */
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, 
+                rgba(59,130,246,0.4) 0%, 
+                rgba(147,51,234,0.3) 50%,
+                rgba(59,130,246,0.4) 100%);
+            border-radius: 32px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.5s;
+            animation: borderGlow 3s ease-in-out infinite;
+        }
+
+        .login-card:hover::before {
+            opacity: 1;
+        }
+
+        @@keyframes borderGlow {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(20deg); }
+        }
+
+        /* Enhanced Alert Banner */
+        .alert-banner {
+            background: rgba(245,158,11,0.15);
+            border: 1px solid rgba(245,158,11,0.3);
+            color: #FCD34D;
+            font-size: 0.85rem;
+            padding: 12px 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 28px;
+            animation: slideDown 0.5s ease;
+        }
+
+        @@keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .alert-banner .icon {
+            font-size: 20px;
+            color: var(--warning);
+        }
+
+        .dismiss-alert {
+            background: none;
+            border: none;
+            color: rgba(252,211,77,0.7);
+            cursor: pointer;
+            padding: 4px;
+            margin-left: auto;
+            width: auto;
+            transition: all 0.2s;
+            border-radius: 6px;
+        }
+
+        .dismiss-alert:hover {
+            color: #FCD34D;
+            background: rgba(252,211,77,0.1);
+            transform: rotate(90deg) !important;
+        }
+
+        .dismiss-alert .material-icons-round {
+            font-size: 18px;
+        }
+
+        /* Premium Greeting Section */
+        .greeting-section {
+            margin-bottom: 36px;
+            text-align: center;
+        }
+
+        .greeting-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, 
+                rgba(59,130,246,0.25), 
+                rgba(147,51,234,0.25));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: iconFloat 4s ease-in-out infinite;
+            box-shadow: 0 8px 24px rgba(59,130,246,0.3);
+            position: relative;
+        }
+
+        .greeting-icon::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: linear-gradient(45deg, var(--accent), var(--accent-light));
+            border-radius: 50%;
+            opacity: 0.3;
+            filter: blur(12px);
+            animation: iconGlow 2s ease-in-out infinite;
+        }
+
+        @@keyframes iconFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        @@keyframes iconGlow {
+            0%, 100% { opacity: 0.3; transform: scale(0.9); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+
+        .greeting-icon .material-icons-round {
+            font-size: 36px;
+            color: var(--accent-light);
+            z-index: 1;
+        }
+
+        h1 {
+            margin: 0 0 12px 0;
+            font-weight: 900;
+            font-size: 2.4rem;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, 
+                var(--text-main) 0%, 
+                var(--accent-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleShimmer 3s ease-in-out infinite;
+        }
+
+        @@keyframes titleShimmer {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+
+        .instruction {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        /* Premium Input Fields */
+        .input-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .field {
+            position: relative;
+        }
+
+        .field input {
+            width: 100%;
+            background: rgba(0,0,0,0.35);
+            border: 2px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 18px 50px 18px 18px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .field input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(0,0,0,0.5);
+            box-shadow: 
+                0 0 0 4px rgba(59,130,246,0.15),
+                0 8px 24px rgba(59,130,246,0.2);
+            transform: translateY(-2px);
+        }
+
+        .field input:valid:not(:placeholder-shown) {
+            border-color: rgba(16,185,129,0.5);
+        }
+
+        .field-icon {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 22px;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+
+        .field input:focus ~ .field-icon {
+            color: var(--accent-light);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .toggle-pass {
+            pointer-events: auto;
+            cursor: pointer;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .toggle-pass:hover {
+            color: var(--text-main);
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Floating Labels */
+        .field label {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: transparent;
+            padding: 0 6px;
+            font-weight: 500;
+        }
+
+        .field input:focus ~ label,
+        .field input:not(:placeholder-shown) ~ label {
+            top: -10px;
+            font-size: 0.75rem;
+            color: var(--accent);
+            background: var(--primary);
+            border-radius: 6px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* Password Strength */
+        .password-strength {
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .password-strength.visible {
+            opacity: 1;
+        }
+
+        .strength-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--danger), var(--warning), var(--success));
+            transition: width 0.4s ease;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .strength-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @@keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            font-size: 0.9rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+            user-select: none;
+            padding: 4px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .remember-me:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .remember-me input {
+            display: none;
+        }
+
+        .checkmark {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--text-muted);
+            border-radius: 7px;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(0,0,0,0.3);
+        }
+
+        .remember-me input:checked ~ .checkmark {
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            border-color: var(--accent);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(59,130,246,0.4);
+        }
+
+        .remember-me input:checked ~ .checkmark::after {
+            content: 'check';
+            font-family: 'Material Icons Round';
+            font-size: 16px;
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: checkPop 0.3s ease;
+        }
+
+        @@keyframes checkPop {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .remember-me .text {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .forgot-link {
+            color: var(--accent-light);
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .forgot-link .material-icons-round {
+            font-size: 16px;
+        }
+
+        .forgot-link:hover {
+            color: var(--accent);
+            background: rgba(59,130,246,0.1);
+            transform: translateX(2px);
+        }
+
+        /* Premium Submit Button */
+        button[type="submit"] {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+            color: white;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 8px 24px rgba(59,130,246,0.4),
+                0 0 40px rgba(59,130,246,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button[type="submit"]::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255,255,255,0.3), 
+                transparent);
+            transition: left 0.6s;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 
+                0 12px 32px rgba(59,130,246,0.5),
+                0 0 60px rgba(59,130,246,0.3);
+        }
+
+        button[type="submit"]:hover::before {
+            left: 100%;
+        }
+
+        button[type="submit"]:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        .loader {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        button.loading .btn-text {
+            display: none;
+        }
+
+        button.loading .loader {
+            display: block;
+        }
+
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Divider */
+        .divider {
+            margin: 32px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 42%;
+            height: 1px;
+            background: linear-gradient(
+                to right,
+                transparent,
+                var(--glass-border),
+                transparent
+            );
+        }
+
+        .divider::before { left: 0; }
+        .divider::after { right: 0; }
+
+        .divider span {
+            background: var(--glass-bg);
+            padding: 0 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* SSO Buttons */
+        .sso-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .sso-btn {
+            padding: 14px;
+            border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.06);
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .sso-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.12);
+            border-color: rgba(255,255,255,0.25);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .sso-btn svg {
+            flex-shrink: 0;
+        }
+
+        /* Quick Links */
+        .quick-links {
+            margin-top: 32px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .quick-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 12px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .quick-link .material-icons-round {
+            font-size: 24px;
+            color: var(--accent-light);
+            transition: transform 0.3s;
+        }
+
+        .quick-link:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-3px);
+            border-color: var(--accent);
+            box-shadow: 0 8px 20px rgba(59,130,246,0.2);
+        }
+
+        .quick-link:hover .material-icons-round {
+            transform: scale(1.2);
+        }
+
+        /* Footer */
+        .card-footer {
+            margin-top: 32px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--glass-border);
+            padding-top: 20px;
+        }
+
+        .card-footer .terms {
+            margin-top: 8px;
+            opacity: 0.7;
+        }
+
+        .app-footer {
+            padding: 24px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.4);
+            border-top: 1px solid var(--glass-border);
+            background: rgba(15,23,42,0.4);
+            backdrop-filter: blur(20px);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .footer-content a {
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .footer-content a:hover {
+            color: var(--accent-light);
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .system-header {
+                padding: 16px 24px;
+            }
+            
+            .login-card {
+                padding: 36px 24px;
+                border-radius: 28px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .quick-links {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .system-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .login-card {
+                padding: 28px 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .sso-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-links {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-wrapper">
+        <div class="bg-image"></div>
+        <div class="bg-overlay"></div>
+        <canvas id="particlesCanvas"></canvas>
+    </div>
+
+    <div class="main-layout">
+        <header class="system-header">
+            <div class="brand">
+                <div class="brand-logo">
+                    <span class="material-icons-round">school</span>
+                </div>
+                <div class="brand-text">
+                    <div class="school-name">@schoolName</div>
+                    <div class="system-name">Faculty & Student Portal</div>
+                </div>
+            </div>
+            <div class="system-status">
+                <span class="status-dot"></span>
+                <span class="status-text">Online</span>
+            </div>
+        </header>
+
+        <main class="login-wrapper">
+            <div class="login-card">
+                <div class="alert-banner" id="alertBanner">
+                    <span class="icon material-icons-round">info</span>
+                    <span>Ensure your credentials are correct before logging in.</span>
+                    <button type="button" class="dismiss-alert" onclick="dismissAlert()">
+                        <span class="material-icons-round">close</span>
+                    </button>
+                </div>
+
+                <div class="greeting-section">
+                    <div class="greeting-icon">
+                        <span class="material-icons-round" id="greetingIcon">brightness_5</span>
+                    </div>
+                    <h1 id="greetingText">Welcome Back!</h1>
+                    <p class="instruction">Enter your email and password to access your account securely.</p>
+                </div>
+
+                <form asp-action="Login" method="post" id="loginForm" autocomplete="off">
+                    <div class="input-group">
+                        <div class="field">
+                            <input asp-for="Email" type="email" placeholder=" " required />
+                            <label>Email Address</label>
+                            <span class="field-icon material-icons-round">email</span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <div class="field">
+                            <input asp-for="Password" type="password" placeholder=" " required id="passwordField" />
+                            <label>Password</label>
+                            <span class="field-icon material-icons-round toggle-pass" onclick="togglePassword()">visibility</span>
+                        </div>
+                        <div class="password-strength" id="passwordStrength">
+                            <div class="strength-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <label class="remember-me">
+                            <input type="checkbox" asp-for="RememberMe" />
+                            <span class="checkmark"></span>
+                            <span class="text">Remember me</span>
+                        </label>
+                        <a class="forgot-link" href="/Account/ForgotPassword">
+                            <span class="material-icons-round">help</span>
+                            Forgot?
+                        </a>
+                    </div>
+
+                    <button type="submit" id="loginBtn">
+                        <span class="btn-text">Login</span>
+                        <span class="loader"></span>
+                    </button>
+
+                    <div class="divider"><span>OR</span></div>
+
+                    <div class="sso-buttons">
+                        <button type="button" class="sso-btn">
+                            <svg viewBox="0 0 24 24" width="18" height="18">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            Google
+                        </button>
+                        <button type="button" class="sso-btn">
+                            <svg viewBox="0 0 24 24" width="18" height="18">
+                                <path fill="#f25022" d="M1 1h10v10H1z"/>
+                                <path fill="#00a4ef" d="M13 1h10v10H13z"/>
+                                <path fill="#7fba00" d="M1 13h10v10H1z"/>
+                                <path fill="#ffb900" d="M13 13h10v10H13z"/>
+                            </svg>
+                            Microsoft
+                        </button>
+                    </div>
+
+                    <div class="quick-links">
+                        <a href="#" class="quick-link">
+                            <span class="material-icons-round">assignment</span>
+                            Results
+                        </a>
+                        <a href="#" class="quick-link">
+                            <span class="material-icons-round">payments</span>
+                            Fees
+                        </a>
+                        <a href="#" class="quick-link">
+                            <span class="material-icons-round">event</span>
+                            Schedule
+                        </a>
+                        <a href="#" class="quick-link">
+                            <span class="material-icons-round">support</span>
+                            Help
+                        </a>
+                    </div>
+
+                    <div class="card-footer">
+                        &copy; @DateTime.Now.Year @schoolName. All rights reserved.
+                        <div class="terms">Terms of Service | Privacy Policy</div>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="footer-content">
+                <a href="#">Contact</a>
+                <a href="#">FAQ</a>
+                <a href="#">Support</a>
+                <a href="#">Privacy</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        /* Enhanced Particle System */
+        const canvas = document.getElementById('particlesCanvas');
+        const ctx = canvas.getContext('2d');
+        let w = canvas.width = window.innerWidth;
+        let h = canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 120;
+        const connectionDistance = 150;
+
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = random(0, w);
+                this.y = random(0, h);
+                this.size = random(1.5, 4);
+                this.speedX = random(-0.4, 0.4);
+                this.speedY = random(-0.6, 0.6);
+                this.color = `rgba(255, 255, 255, ${random(0.2, 0.6)})`;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x > w) this.x = 0;
+                if (this.x < 0) this.x = w;
+                if (this.y > h) this.y = 0;
+                if (this.y < 0) this.y = h;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function connectParticles() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < connectionDistance) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(59, 130, 246, ${0.15 * (1 - distance / connectionDistance)})`;
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, w, h);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            connectParticles();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        });
+
+        /* Dynamic Greeting */
+        const greetingText = document.getElementById('greetingText');
+        const greetingIcon = document.getElementById('greetingIcon');
+        const hours = new Date().getHours();
+        
+        if (hours < 12) {
+            greetingText.textContent = 'Good Morning!';
+            greetingIcon.textContent = 'wb_sunny';
+        } else if (hours < 18) {
+            greetingText.textContent = 'Good Afternoon!';
+            greetingIcon.textContent = 'wb_twilight';
+        } else {
+            greetingText.textContent = 'Good Evening!';
+            greetingIcon.textContent = 'nightlight_round';
+        }
+
+        /* Dismiss Alert */
+        function dismissAlert() {
+            const banner = document.getElementById('alertBanner');
+            banner.style.animation = 'slideDown 0.3s ease reverse';
+            setTimeout(() => banner.style.display = 'none', 300);
+        }
+
+        /* Toggle Password */
+        function togglePassword() {
+            const passField = document.getElementById('passwordField');
+            const icon = document.querySelector('.toggle-pass');
+            if (passField.type === 'password') {
+                passField.type = 'text';
+                icon.textContent = 'visibility_off';
+            } else {
+                passField.type = 'password';
+                icon.textContent = 'visibility';
+            }
+        }
+
+        /* Password Strength */
+        const passwordField = document.getElementById('passwordField');
+        const strengthBar = document.querySelector('.strength-bar');
+        const strengthContainer = document.getElementById('passwordStrength');
+
+        passwordField.addEventListener('input', function() {
+            const val = passwordField.value;
+            let strength = 0;
+            
+            if (val.length >= 6) strength++;
+            if (val.length >= 10) strength++;
+            if (/[A-Z]/.test(val)) strength++;
+            if (/[0-9]/.test(val)) strength++;
+            if (/[\W_]/.test(val)) strength++;
+            
+            strengthBar.style.width = (strength * 20) + '%';
+            strengthContainer.classList.toggle('visible', val.length > 0);
+        });
+
+        /* Form Submit */
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        
+        loginForm.addEventListener('submit', function(e) {
+            loginBtn.classList.add('loading');
+        });
+    </script>
+</body>
+</html>

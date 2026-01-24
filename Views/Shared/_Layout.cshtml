@@ -1,0 +1,1004 @@
+﻿@{
+    ViewData["Title"] = "Cardinal Otunga High School Mosocho";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - EduTrack</title>
+    
+    <!-- BOOTSTRAP 5 + ICONS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    
+    <style>
+        :root {
+            /* Cardinal Otunga Theme Colors - Navy Blue & Gold */
+            --primary: #1a3a6b;
+            --primary-dark: #0f2545;
+            --secondary: #c9a961;
+            --accent: #8b7355;
+            --text-dark: #1E293B;
+            --text-muted: #64748B;
+            --bg-light: #F8FAFC;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            scroll-behavior: smooth;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            -webkit-font-smoothing: antialiased;
+            font-size: 14px;
+        }
+
+        /* ================= NAVBAR WITH SCHOOL LOGO ================= */
+        .navbar {
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+            padding: 12px 0;
+            transition: all 0.3s ease;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar.scrolled {
+            padding: 8px 0;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .navbar-brand {
+            font-weight: 800 !important;
+            font-size: 1.2rem;
+            color: var(--primary) !important;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .navbar-logo {
+            width: 45px;
+            height: 45px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--secondary);
+            box-shadow: 0 2px 8px rgba(26, 58, 107, 0.15);
+            overflow: hidden;
+        }
+
+        .navbar-logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .navbar-logo-placeholder {
+            font-size: 1.3rem;
+            color: var(--primary);
+        }
+
+        .school-name {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .school-name-main {
+            font-weight: 800;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .school-name-sub {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-link {
+            font-weight: 600 !important;
+            color: var(--text-dark) !important;
+            padding: 8px 16px !important;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 0.9rem;
+        }
+
+        .nav-link:hover {
+            background: rgba(26, 58, 107, 0.08);
+            color: var(--primary) !important;
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white !important;
+            box-shadow: 0 3px 10px rgba(26, 58, 107, 0.3);
+        }
+
+        /* Custom Navbar Toggle */
+        .navbar-toggler {
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 6px 10px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 3px rgba(26, 58, 107, 0.15);
+        }
+
+        .navbar-toggler-icon {
+            background-image: none;
+            width: 22px;
+            height: 2px;
+            background: var(--primary);
+            display: block;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-toggler-icon::before,
+        .navbar-toggler-icon::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 2px;
+            background: var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .navbar-toggler-icon::before {
+            top: -7px;
+        }
+
+        .navbar-toggler-icon::after {
+            bottom: -7px;
+        }
+
+        /* Animated Toggle Icon */
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
+            background: transparent;
+        }
+
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::before {
+            top: 0;
+            transform: rotate(45deg);
+        }
+
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::after {
+            bottom: 0;
+            transform: rotate(-45deg);
+        }
+
+        /* Mobile Menu */
+        @@media (max-width: 991px) {
+            .navbar-collapse {
+                margin-top: 12px;
+                padding: 16px;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            }
+
+            .nav-link {
+                margin: 3px 0;
+            }
+
+            .school-name-main {
+                font-size: 0.95rem;
+            }
+
+            .school-name-sub {
+                font-size: 0.65rem;
+            }
+
+            .navbar-logo {
+                width: 38px;
+                height: 38px;
+            }
+        }
+
+        /* ================= FOOTER ================= */
+        footer {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #94A3B8;
+            padding: 50px 0 25px;
+            margin-top: 60px;
+            position: relative;
+            font-size: 0.85rem;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(201, 169, 97, 0.5), transparent);
+        }
+
+        .footer-brand {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-logo {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--secondary);
+        }
+
+        .footer-logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .footer-logo-placeholder {
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        .footer-tagline {
+            color: #64748B;
+            font-size: 0.85rem;
+            margin-bottom: 25px;
+        }
+
+        .footer-section h5 {
+            color: white;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            font-size: 0.95rem;
+        }
+
+        .footer-link {
+            color: #94A3B8;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: block;
+            margin-bottom: 0.6rem;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .footer-link:hover {
+            color: white;
+            background: rgba(201, 169, 97, 0.1);
+            transform: translateX(5px);
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 12px;
+            margin-top: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .social-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94A3B8;
+            transition: all 0.3s;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .social-icon:hover {
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(201, 169, 97, 0.3);
+        }
+
+        .footer-bottom {
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            font-size: 0.8rem;
+            color: #64748B;
+            margin-top: 25px;
+        }
+
+        /* ==================== LOGIN MODAL ==================== */
+        .auth-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(12px);
+        }
+
+        .auth-modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .auth-modal-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 90%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .auth-modal-container.animate-in {
+            animation: slideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .auth-modal-container.animate-out {
+            animation: slideOut 0.4s ease forwards;
+        }
+
+        @@keyframes slideIn {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @@keyframes slideOut {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+        }
+
+        .auth-modal-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 1.8rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .auth-modal-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.4rem;
+            font-weight: 700;
+        }
+
+        .auth-modal-header p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .auth-close-btn {
+            position: absolute;
+            top: 0.8rem;
+            right: 0.8rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.3s ease;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .auth-close-btn:hover {
+            transform: rotate(90deg);
+        }
+
+        .auth-modal-content {
+            padding: 1.8rem;
+        }
+
+        .role-buttons {
+            display: flex;
+            gap: 0.8rem;
+            flex-direction: column;
+        }
+
+        .auth-role-btn {
+            padding: 1rem;
+            border: 2px solid #e5e5e5;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .auth-role-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            z-index: -1;
+            transition: left 0.3s ease;
+        }
+
+        .auth-role-btn:hover::before {
+            left: 0;
+        }
+
+        .auth-role-btn:hover {
+            border-color: transparent;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(26, 58, 107, 0.3);
+        }
+
+        .auth-role-icon {
+            font-size: 1.5rem;
+            width: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .auth-role-text {
+            flex: 1;
+        }
+
+        .auth-input-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .auth-input-group label {
+            display: block;
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .auth-input-wrapper {
+            position: relative;
+        }
+
+        .auth-input-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e5e5e5;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .auth-input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26, 58, 107, 0.1);
+        }
+
+        .auth-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e5e5;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            max-height: 180px;
+            overflow-y: auto;
+            z-index: 10;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-suggestions.active {
+            display: block;
+        }
+
+        .auth-suggestion-item {
+            padding: 0.7rem 0.8rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+        }
+
+        .auth-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .auth-suggestion-item:hover {
+            background: #f4f4f4;
+        }
+
+        .auth-suggestion-item.selected {
+            background: rgba(26, 58, 107, 0.08);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .auth-suggestion-icon {
+            font-size: 1rem;
+            opacity: 0.6;
+        }
+
+        .auth-info-text {
+            color: #666;
+            font-size: 0.8rem;
+            margin-top: 0.4rem;
+        }
+
+        .auth-error-message {
+            color: #e74c3c;
+            font-size: 0.8rem;
+            margin-top: 0.4rem;
+            display: none;
+        }
+
+        .auth-error-message.show {
+            display: block;
+        }
+
+        .auth-proceed-btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .auth-proceed-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(26, 58, 107, 0.3);
+        }
+
+        .auth-proceed-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .auth-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: authSpin 0.8s linear infinite;
+        }
+
+        @@keyframes authSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ================= RESPONSIVE ================= */
+        @@media (max-width: 768px) {
+            body {
+                font-size: 13px;
+            }
+
+            footer {
+                padding: 35px 0 20px;
+                font-size: 0.8rem;
+            }
+
+            .auth-modal-header h2 {
+                font-size: 1.2rem;
+            }
+
+            .auth-modal-content {
+                padding: 1.3rem;
+            }
+
+            .auth-role-btn {
+                padding: 0.8rem;
+                font-size: 0.85rem;
+            }
+
+            .auth-role-icon {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ================= NAVBAR ================= -->
+    <header>
+        <nav class="navbar navbar-expand-lg">
+            <div class="container">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                    <div class="navbar-logo">
+                        <img src="/images/school-logo.png" alt="School Logo" style="display: none;" id="navLogoImg">
+                        <i class="bi bi-mortarboard-fill navbar-logo-placeholder" id="navLogoPlaceholder"></i>
+                    </div>
+                    <div class="school-name">
+                        <span class="school-name-main">Cardinal Otunga High School</span>
+                        <span class="school-name-sub">Mosocho</span>
+                    </div>
+                </a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-house-door me-1"></i> Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Privacy">
+                                <i class="bi bi-shield-check me-1"></i> Privacy
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" id="authLoginBtn" style="cursor: pointer;">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Login
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- ================= MAIN CONTENT ================= -->
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- ================= FOOTER ================= -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 mb-4">
+                    <div class="footer-brand">
+                        <div class="footer-logo">
+                            <img src="/images/school-logo.png" alt="School Logo" style="display: none;" id="footerLogoImg">
+                            <i class="bi bi-mortarboard-fill footer-logo-placeholder" id="footerLogoPlaceholder"></i>
+                        </div>
+                        Cardinal Otunga
+                    </div>
+                    <div class="footer-tagline">Excellence Through Discipline</div>
+                    <div class="footer-social">
+                        <a href="#" class="social-icon" aria-label="Facebook">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <a href="#" class="social-icon" aria-label="Twitter">
+                            <i class="bi bi-twitter"></i>
+                        </a>
+                        <a href="#" class="social-icon" aria-label="LinkedIn">
+                            <i class="bi bi-linkedin"></i>
+                        </a>
+                        <a href="#" class="social-icon" aria-label="Instagram">
+                            <i class="bi bi-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="footer-section">
+                        <h5>Quick Links</h5>
+                        <a href="#" class="footer-link">About Us</a>
+                        <a href="#" class="footer-link">Academics</a>
+                        <a href="#" class="footer-link">Admissions</a>
+                        <a href="#" class="footer-link">Events</a>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="footer-section">
+                        <h5>Resources</h5>
+                        <a href="#" class="footer-link">Student Portal</a>
+                        <a href="#" class="footer-link">Parent Portal</a>
+                        <a href="#" class="footer-link">Library</a>
+                        <a href="#" class="footer-link">Contact</a>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="footer-section">
+                        <h5>Legal</h5>
+                        <a href="#" class="footer-link">Privacy Policy</a>
+                        <a href="#" class="footer-link">Terms of Service</a>
+                        <a href="#" class="footer-link">Data Protection</a>
+                        <a href="#" class="footer-link">Cookie Policy</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="mb-0">&copy; 2025 Cardinal Otunga High School Mosocho. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ================= LOGIN MODAL ================= -->
+    <div class="auth-modal-overlay" id="authModalOverlay">
+        <div class="auth-modal-container" id="authModalContainer">
+            <button class="auth-close-btn" id="authCloseBtn">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <!-- Role Selection Modal -->
+            <div id="roleSelectionModal">
+                <div class="auth-modal-header">
+                    <h2>Login to System</h2>
+                    <p>Choose your login type</p>
+                </div>
+                <div class="auth-modal-content">
+                    <div class="role-buttons">
+                        <button class="auth-role-btn" id="parentBtn">
+                            <div class="auth-role-icon">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <div class="auth-role-text">
+                                <div>Login as Parent</div>
+                                <small style="opacity: 0.8; font-weight: 400; font-size: 0.8rem;">Access student information</small>
+                            </div>
+                        </button>
+                        <button class="auth-role-btn" id="principalBtn">
+                            <div class="auth-role-icon">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div class="auth-role-text">
+                                <div>Login as Staff</div>
+                                <small style="opacity: 0.8; font-weight: 400; font-size: 0.8rem;">Teachers & Administrators</small>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- School Verification Modal (Removed for single school) -->
+            <div id="schoolSelectionModal" style="display: none;">
+                <div class="auth-modal-header">
+                    <h2>Verify School</h2>
+                    <p id="schoolSubtitle">Confirm your school</p>
+                </div>
+                <div class="auth-modal-content">
+                    <div class="text-center mb-3">
+                        <div class="navbar-logo mx-auto mb-3" style="width: 60px; height: 60px;">
+                            <img src="/images/school-logo.png" alt="School Logo" style="display: none;" class="school-verify-logo">
+                            <i class="bi bi-mortarboard-fill navbar-logo-placeholder" style="font-size: 1.8rem;"></i>
+                        </div>
+                        <h5 style="color: var(--primary); margin-bottom: 0.3rem;">Cardinal Otunga High School</h5>
+                        <p style="color: #64748B; font-size: 0.85rem; margin: 0;">Mosocho</p>
+                    </div>
+                    <button class="auth-proceed-btn" id="proceedBtn">
+                        <i class="fas fa-arrow-right"></i> Proceed to Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SCRIPTS ================= -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Logo loading for navbar
+        const navLogoImg = document.getElementById('navLogoImg');
+        const navLogoPlaceholder = document.getElementById('navLogoPlaceholder');
+        
+        navLogoImg.onerror = function() {
+            this.style.display = 'none';
+            navLogoPlaceholder.style.display = 'block';
+        };
+        
+        navLogoImg.onload = function() {
+            this.style.display = 'block';
+            navLogoPlaceholder.style.display = 'none';
+        };
+        
+        navLogoImg.src = navLogoImg.getAttribute('src');
+
+        // Logo loading for footer
+        const footerLogoImg = document.getElementById('footerLogoImg');
+        const footerLogoPlaceholder = document.getElementById('footerLogoPlaceholder');
+        
+        footerLogoImg.onerror = function() {
+            this.style.display = 'none';
+            footerLogoPlaceholder.style.display = 'block';
+        };
+        
+        footerLogoImg.onload = function() {
+            this.style.display = 'block';
+            footerLogoPlaceholder.style.display = 'none';
+        };
+        
+        footerLogoImg.src = footerLogoImg.getAttribute('src');
+
+        let selectedRole = null;
+
+        const authLoginBtn = document.getElementById('authLoginBtn');
+        const authCloseBtn = document.getElementById('authCloseBtn');
+        const authModalOverlay = document.getElementById('authModalOverlay');
+        const authModalContainer = document.getElementById('authModalContainer');
+        const roleSelectionModal = document.getElementById('roleSelectionModal');
+        const schoolSelectionModal = document.getElementById('schoolSelectionModal');
+        const parentBtn = document.getElementById('parentBtn');
+        const principalBtn = document.getElementById('principalBtn');
+        const proceedBtn = document.getElementById('proceedBtn');
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Close mobile menu when clicking a link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                const navbarCollapse = document.querySelector('.navbar-collapse');
+                if (navbarCollapse && navbarCollapse.classList.contains('show')) {
+                    const bsCollapse = new bootstrap.Collapse(navbarCollapse);
+                    bsCollapse.hide();
+                }
+            });
+        });
+
+        // Set active nav link based on current page
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.nav-link').forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && href === currentPath) {
+                link.classList.add('active');
+            }
+        });
+
+        // Open login modal
+        authLoginBtn.addEventListener('click', () => {
+            authModalOverlay.classList.add('active');
+            authModalContainer.classList.add('animate-in');
+        });
+
+        // Close modal
+        authCloseBtn.addEventListener('click', closeAuthModal);
+        authModalOverlay.addEventListener('click', (e) => {
+            if (e.target === authModalOverlay) closeAuthModal();
+        });
+
+        function closeAuthModal() {
+            authModalContainer.classList.remove('animate-in');
+            authModalContainer.classList.add('animate-out');
+            setTimeout(() => {
+                authModalOverlay.classList.remove('active');
+                authModalContainer.classList.remove('animate-out');
+                resetAuthModal();
+            }, 400);
+        }
+
+        function resetAuthModal() {
+            selectedRole = null;
+            roleSelectionModal.style.display = 'block';
+            schoolSelectionModal.style.display = 'none';
+        }
+
+        // Parent button click
+        parentBtn.addEventListener('click', () => {
+            selectedRole = 'parent';
+            transitionToSchoolVerification();
+        });
+
+        // Principal/Staff button click
+        principalBtn.addEventListener('click', () => {
+            selectedRole = 'staff';
+            transitionToSchoolVerification();
+        });
+
+        function transitionToSchoolVerification() {
+            authModalContainer.classList.add('animate-out');
+            setTimeout(() => {
+                roleSelectionModal.style.display = 'none';
+                schoolSelectionModal.style.display = 'block';
+                authModalContainer.classList.remove('animate-out');
+                authModalContainer.classList.add('animate-in');
+            }, 200);
+        }
+
+        // Proceed button click
+        proceedBtn.addEventListener('click', () => {
+            proceedBtn.disabled = true;
+            proceedBtn.innerHTML = '<span class="auth-spinner"></span> Processing...';
+
+            setTimeout(() => {
+                if (selectedRole === 'parent') {
+                    window.location.href = '${baseUrl}/${subdomain}/parent';
+                } else if (selectedRole === 'staff') {
+                    window.location.href = '/login';
+                }
+            }, 800);
+        });
+    </script>
+</body>
+</html>

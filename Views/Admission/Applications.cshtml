@@ -1,0 +1,1080 @@
+@{
+    Layout = null;
+    var schoolName = (ViewData["SchoolName"]?.ToString() ?? "School");
+    var user = (ViewData["User"]?.ToString() ?? "Admission Officer");
+    var tenantSubdomain = Context.Session.GetString("tenant");
+    schoolName = char.ToUpper(schoolName[0]) + schoolName.Substring(1);
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@schoolName | Apply New Learner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #F1F5F9;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --primary: #3B82F6;
+            --primary-hover: #2563EB;
+            --primary-soft: #EFF6FF;
+            --success: #10B981;
+            --success-soft: #D1FAE5;
+            --error: #EF4444;
+            --error-soft: #FEE2E2;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --accent: #8B5CF6;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 32px 20px;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .loading-spinner {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @@keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 8888;
+            animation: fadeIn 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+        @@keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-backdrop.active {
+            display: flex;
+        }
+        .modal-card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            animation: scaleIn 0.3s ease;
+            text-align: center;
+        }
+        .modal-card.success {
+            border: 3px solid var(--success);
+        }
+        .modal-card.error {
+            border: 3px solid var(--error);
+        }
+        .modal-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 48px;
+        }
+        .modal-card.success .modal-icon {
+            background: var(--success-soft);
+            color: var(--success);
+        }
+        .modal-card.error .modal-icon {
+            background: var(--error-soft);
+            color: var(--error);
+        }
+        .modal-card h3 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: var(--text-main);
+        }
+        .modal-card.success h3 {
+            color: var(--success);
+        }
+        .modal-card.error h3 {
+            color: var(--error);
+        }
+        .modal-card p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .success-details {
+            background: var(--success-soft);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 24px 0;
+            text-align: left;
+        }
+        .success-details-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 12px 0;
+            font-size: 0.95rem;
+        }
+        .success-details-item label {
+            font-weight: 600;
+            color: var(--text-main);
+            margin: 0;
+        }
+        .success-details-item .value {
+            background: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            color: var(--success);
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .success-details-item .value:hover {
+            background: var(--success);
+            color: white;
+            transform: scale(1.05);
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 28px;
+        }
+        .modal-btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-btn-primary {
+            background: var(--primary);
+            color: white;
+            flex: 1;
+        }
+        .modal-btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+        }
+        .modal-btn-secondary {
+            background: var(--border);
+            color: var(--text-main);
+            flex: 1;
+        }
+        .modal-btn-secondary:hover {
+            background: var(--primary-soft);
+            transform: translateY(-2px);
+        }
+        .error-card {
+            background: var(--error-soft);
+            border: 2px solid var(--error);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .error-card .material-icons-round {
+            color: var(--error);
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .error-card-content {
+            flex: 1;
+            text-align: left;
+        }
+        .error-card-content h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--error);
+            margin-bottom: 4px;
+        }
+        .error-card-content p {
+            font-size: 0.85rem;
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .header-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+        }
+        .header-icon .material-icons-round {
+            font-size: 42px;
+            color: white;
+        }
+        .page-header h2 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            margin-bottom: 24px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--surface);
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        .back-btn:hover {
+            background: var(--primary-soft);
+            border-color: var(--primary);
+            transform: translateX(-4px);
+        }
+        .form-container {
+            background: var(--surface);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--border);
+        }
+        .account-banner {
+            background: linear-gradient(135deg, var(--success), #14B8A6);
+            color: white;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .account-banner-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .account-banner-icon .material-icons-round {
+            font-size: 32px;
+        }
+        .account-banner-content h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            opacity: 0.95;
+            margin-bottom: 4px;
+        }
+        .account-banner-content .account-number {
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            padding: 0 20px;
+        }
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        .step::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: var(--border);
+            z-index: 0;
+        }
+        .step:last-child::after {
+            display: none;
+        }
+        .step.active::after {
+            background: var(--primary);
+        }
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            background: var(--border);
+            color: var(--text-muted);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s;
+        }
+        .step.active .step-circle {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        .step-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .step.active .step-label {
+            color: var(--primary);
+        }
+        .profile-pic-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-width: 180px;
+        }
+        .profile-pic-card {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #eef2ff, #f8fafc);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+        }
+        .profile-pic-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+        }
+        .profile-pic-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .pic-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease;
+        }
+        .profile-pic-card:hover .pic-overlay {
+            opacity: 1;
+        }
+        #ProfilePhoto {
+            appearance: none;
+            border: 1px dashed #c7d2fe;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: #fafafa;
+            cursor: pointer;
+            font-size: 13px;
+            transition: border-color 0.3s ease, background 0.3s ease;
+        }
+        #ProfilePhoto:hover {
+            background: #f5f7ff;
+            border-color: #6366f1;
+        }
+        #ProfilePhoto:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        }
+        fieldset {
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 28px;
+            transition: all 0.3s;
+        }
+        fieldset:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.1);
+        }
+        legend {
+            padding: 0 12px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        legend .material-icons-round {
+            color: var(--primary);
+            font-size: 22px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.9rem;
+        }
+        label .required {
+            color: #EF4444;
+            margin-left: 2px;
+        }
+        label .optional {
+            color: var(--text-muted);
+            font-weight: 400;
+            font-size: 0.8rem;
+            margin-left: 4px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
+            background: var(--surface);
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+        input[readonly] {
+            background: var(--primary-soft);
+            color: var(--primary);
+            font-weight: 700;
+            cursor: not-allowed;
+            border-color: var(--primary);
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .info-box {
+            background: var(--primary-soft);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .info-box .material-icons-round {
+            color: var(--primary);
+            font-size: 24px;
+        }
+        .info-box-content {
+            flex: 1;
+        }
+        .info-box-content h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        .info-box-content p {
+            font-size: 0.85rem;
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(59, 130, 246, 0.4);
+        }
+        .submit-btn:active {
+            transform: translateY(-1px);
+        }
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .helper-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+        @@media (max-width: 768px) {
+            .container { padding: 20px 16px; }
+            .form-container { padding: 24px 20px; }
+            .page-header h2 { font-size: 1.8rem; }
+            .form-row { grid-template-columns: 1fr; }
+            .progress-steps { padding: 0; }
+            .step-label { font-size: 0.7rem; }
+            fieldset { padding: 20px; }
+            .profile-pic-wrapper { max-width: 100%; }
+            .profile-pic-card { width: 140px; height: 140px; margin: 0 auto; }
+            .modal-card { padding: 32px 24px; }
+        }
+    </style>
+</head>
+<body>
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p style="color: var(--text-main); font-weight: 600;">Loading school configuration...</p>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal-card" id="modalCard">
+        <div class="modal-icon" id="modalIcon"></div>
+        <h3 id="modalTitle"></h3>
+        <p id="modalMessage"></p>
+        <div id="modalDetails"></div>
+        <div class="modal-actions" id="modalActions"></div>
+    </div>
+</div>
+
+<div class="container">
+    <a href="/@tenantSubdomain/admission/index" class="back-btn">
+        <span class="material-icons-round">arrow_back</span>
+        Back to Dashboard
+    </a>
+    <div class="page-header">
+        <div class="header-icon">
+            <span class="material-icons-round">person_add</span>
+        </div>
+        <h2>Apply New Learner</h2>
+        <p>Register a new student into the @schoolName system</p>
+    </div>
+    <div class="form-container">
+        <div class="account-banner">
+            <div class="account-banner-icon">
+                <span class="material-icons-round">badge</span>
+            </div>
+            <div class="account-banner-content">
+                <h3>Auto-Generated Account Number</h3>
+                <div class="account-number" id="accountNumberDisplay">Will be generated</div>
+            </div>
+        </div>
+        <form method="post" id="admissionForm" enctype="multipart/form-data">
+            <fieldset>
+                <legend>
+                    <span class="material-icons-round">school</span>
+                    Learner Information
+                </legend>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fullName">Full Name <span class="required">*</span></label>
+                        <input type="text" id="fullName" name="FullName" placeholder="Enter learner's full name" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="dateOfBirth">Date of Birth <span class="required">*</span></label>
+                        <input type="date" id="dateOfBirth" name="DateOfBirth" required />
+                        <span class="helper-text">Used to calculate age and grade eligibility</span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" id="genderContainer"></div>
+                    <div class="form-group">
+                        <label for="grade">Grade/Class <span class="required">*</span></label>
+                        <select id="grade" name="Grade" required>
+                            <option value="">Select Grade</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="stream">Stream <span class="optional">(Optional)</span></label>
+                        <select id="stream" name="Stream">
+                            <option value="">Select Stream</option>
+                        </select>
+                        <span class="helper-text">Leave blank if no streams available</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="previousSchool">Previous School <span class="optional">(Optional)</span></label>
+                        <input type="text" id="previousSchool" name="PreviousSchool" placeholder="Name of previous school" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Learner Photo <span class="required">*</span></label>
+                        <div class="profile-pic-wrapper">
+                            <div class="profile-pic-card">
+                                <img id="profilePreview" 
+                                     src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect fill='%23eef2ff' width='160' height='160'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='48' fill='%233b82f6'%3E%F0%9F%93%B7%3C/text%3E%3C/svg%3E"
+                                     alt="Student Photo" />
+                                <label for="ProfilePhoto" class="pic-overlay">
+                                    <span>Choose Photo</span>
+                                </label>
+                            </div>
+                            <input type="file" id="ProfilePhoto" name="Photo" accept="image/*" onchange="previewProfilePic(event)" required />
+                        </div>
+                        <span class="helper-text">Passport-size photo (Max 5MB, JPG/PNG)</span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="medicalInfo">Medical Information <span class="optional">(Optional)</span></label>
+                        <textarea id="medicalInfo" name="MedicalInfo" placeholder="Any allergies, conditions, or special medical needs..."></textarea>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>
+                    <span class="material-icons-round">family_restroom</span>
+                    Parent / Guardian Information
+                </legend>
+                <div class="info-box">
+                    <span class="material-icons-round">info</span>
+                    <div class="info-box-content">
+                        <h4>Primary Contact</h4>
+                        <p>This person will receive all school communications and fee notifications</p>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="guardianName">Full Name <span class="required">*</span></label>
+                        <input type="text" id="guardianName" name="GuardianName" placeholder="Guardian's full name" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="relationship">Relationship <span class="required">*</span></label>
+                        <select id="relationship" name="GuardianRelationship" required>
+                            <option value="">Select Relationship</option>
+                            <option value="Father">Father</option>
+                            <option value="Mother">Mother</option>
+                            <option value="Guardian">Legal Guardian</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="guardianPhone">Phone Number <span class="required">*</span></label>
+                        <input type="tel" id="guardianPhone" name="GuardianPhone" placeholder="+254 XXX XXX XXX" required />
+                        <span class="helper-text">Used for SMS notifications</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="guardianEmail">Email Address <span class="optional">(Optional)</span></label>
+                        <input type="email" id="guardianEmail" name="GuardianEmail" placeholder="guardian@example.com" />
+                        <span class="helper-text">Used for email notifications</span>
+                    </div>
+                </div>
+            </fieldset>
+            <button type="submit" class="submit-btn">
+                <span class="material-icons-round">check_circle</span>
+                Submit Application
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    let schoolConfig = null;
+    const schoolName = '@tenantSubdomain';
+
+    function previewProfilePic(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+            showErrorModal('File Too Large', 'File size must be less than 5MB');
+            event.target.value = '';
+            return;
+        }
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (!allowedTypes.includes(file.type)) {
+            showErrorModal('Invalid Format', 'Only JPG and PNG images are allowed');
+            event.target.value = '';
+            return;
+        }
+        const img = document.getElementById("profilePreview");
+        img.style.opacity = "0.6";
+        const reader = new FileReader();
+        reader.onload = () => {
+            img.src = reader.result;
+            img.style.opacity = "1";
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function showErrorModal(title, message) {
+        const backdrop = document.getElementById('modalBackdrop');
+        const card = document.getElementById('modalCard');
+        const icon = document.getElementById('modalIcon');
+        const titleEl = document.getElementById('modalTitle');
+        const msgEl = document.getElementById('modalMessage');
+        const details = document.getElementById('modalDetails');
+        const actions = document.getElementById('modalActions');
+
+        card.classList.remove('success');
+        card.classList.add('error');
+        icon.innerHTML = '<span class="material-icons-round">error_outline</span>';
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+        details.innerHTML = '';
+        
+        actions.innerHTML = `
+            <button type="button" class="modal-btn modal-btn-primary" onclick="closeModal()">
+                <span class="material-icons-round">close</span>
+                Close
+            </button>
+        `;
+
+        backdrop.classList.add('active');
+    }
+
+    function showSuccessModal(data) {
+        const backdrop = document.getElementById('modalBackdrop');
+        const card = document.getElementById('modalCard');
+        const icon = document.getElementById('modalIcon');
+        const titleEl = document.getElementById('modalTitle');
+        const msgEl = document.getElementById('modalMessage');
+        const details = document.getElementById('modalDetails');
+        const actions = document.getElementById('modalActions');
+
+        card.classList.remove('error');
+        card.classList.add('success');
+        icon.innerHTML = '<span class="material-icons-round">check_circle</span>';
+        titleEl.textContent = 'Registration Successful! 🎉';
+        msgEl.textContent = 'Your application has been submitted successfully.';
+        
+        details.innerHTML = `
+            <div class="success-details">
+                <div class="success-details-item">
+                    <label>Account Number:</label>
+                    <div class="value" onclick="copyToClipboard('${data.accountNo}')">
+                        ${data.accountNo}
+                    </div>
+                </div>
+                <div class="success-details-item">
+                    <label>Student ID:</label>
+                    <div class="value" onclick="copyToClipboard('${data.studentId}')">
+                        ${data.studentId}
+                    </div>
+                </div>
+                <div class="success-details-item" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(16, 185, 129, 0.2);">
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+                        ℹ️ Click on any value to copy to clipboard
+                    </p>
+                </div>
+            </div>
+        `;
+
+        actions.innerHTML = `
+            <button type="button" class="modal-btn modal-btn-primary" onclick="goToDashboard()">
+                <span class="material-icons-round">arrow_forward</span>
+                Go to Dashboard
+            </button>
+            <button type="button" class="modal-btn modal-btn-secondary" onclick="resetForm()">
+                <span class="material-icons-round">add</span>
+                Register Another
+            </button>
+        `;
+
+        backdrop.classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('modalBackdrop').classList.remove('active');
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            const tmpMsg = document.createElement('div');
+            tmpMsg.textContent = '✓ Copied!';
+            tmpMsg.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--success);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-weight: 600;
+                z-index: 10000;
+                animation: slideDown 0.3s ease;
+            `;
+            document.body.appendChild(tmpMsg);
+            setTimeout(() => tmpMsg.remove(), 2000);
+        });
+    }
+
+    function goToDashboard() {
+        window.location.href = `/${schoolName}/admission/`;
+    }
+
+function resetForm() {
+        document.getElementById('admissionForm').reset();
+        document.getElementById('profilePreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect fill='%23eef2ff' width='160' height='160'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='48' fill='%233b82f6'%3E%F0%9F%93%B7%3C/text%3E%3C/svg%3E";
+        document.getElementById('ProfilePhoto').value = '';
+        closeModal();
+        activateSubmitButton();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function activateSubmitButton() {
+        const submitBtn = document.querySelector('.submit-btn');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span class="material-icons-round">check_circle</span> Submit Application';
+    }
+async function loadSchoolConfig() {
+        try {
+            const response = await fetch(`/${schoolName}/admission/config`);
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error('Failed to load school configuration');
+            }
+            schoolConfig = data;
+            populateGrades();
+            setupGenderField();
+            hideLoadingOverlay();
+        } catch (error) {
+            console.error('Config load error:', error);
+            showErrorModal('Configuration Error', 'Failed to load school configuration. Please refresh the page.');
+            hideLoadingOverlay();
+        }
+    }
+    function populateGrades() {
+        const gradeSelect = document.getElementById('grade');
+        gradeSelect.innerHTML = '<option value="">Select Grade</option>';
+        if (schoolConfig && schoolConfig.grades) {
+            schoolConfig.grades.forEach((grade) => {
+                const option = document.createElement('option');
+                option.value = grade.name;
+                option.textContent = grade.name;
+                gradeSelect.appendChild(option);
+            });
+        }
+    }
+
+    function setupGenderField() {
+        const genderContainer = document.getElementById('genderContainer');
+        if (schoolConfig.genderPolicy === 'Mixed') {
+            genderContainer.innerHTML = `
+                <label for="gender">Gender <span class="required">*</span></label>
+                <select id="gender" name="Gender" required>
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            `;
+        } else {
+            const autoGender = schoolConfig.genderPolicy === 'Boys' ? 'Male' : 'Female';
+            genderContainer.innerHTML = `
+                <input type="hidden" name="Gender" value="${autoGender}" />
+                <label>Gender (Auto-assigned)</label>
+                <input type="text" value="${autoGender}" readonly />
+                <span class="helper-text">Automatically set based on school type</span>
+            `;
+        }
+    }
+
+    document.getElementById('grade').addEventListener('change', function() {
+        const streamSelect = document.getElementById('stream');
+        streamSelect.innerHTML = '<option value="">Select Stream</option>';
+        const selectedGrade = this.value;
+        if (!selectedGrade || !schoolConfig) return;
+        const gradeData = schoolConfig.grades.find(g => g.name === selectedGrade);
+        if (gradeData && gradeData.streams && gradeData.streams.length > 0) {
+            gradeData.streams.forEach(stream => {
+                if (stream !== 'NON') {
+                    const option = document.createElement('option');
+                    option.value = stream;
+                    option.textContent = stream.toUpperCase();
+                    streamSelect.appendChild(option);
+                }
+            });
+        }
+    });
+
+    document.getElementById('admissionForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const submitBtn = document.querySelector('.submit-btn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> Processing...';
+
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch(`/${schoolName}/admission/register`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message || 'Registration failed');
+            }
+
+            showSuccessModal({
+                accountNo: result.accountNo,
+                studentId: result.studentId
+            });
+        } catch (error) {
+            showErrorModal('Registration Failed', error.message || 'An unexpected error occurred. Please try again.');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span class="material-icons-round">check_circle</span> Submit Application';
+        }
+    });
+
+    const learnerFields = ['fullName', 'dateOfBirth', 'grade'];
+    const guardianFields = ['guardianName', 'relationship', 'guardianPhone'];
+    
+    learnerFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('focus', () => {
+                document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+                document.querySelector('.step:nth-child(1)').classList.add('active');
+            });
+        }
+    });
+    
+    guardianFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('focus', () => {
+                document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+                document.querySelector('.step:nth-child(2)').classList.add('active');
+            });
+        }
+    });
+
+    function hideLoadingOverlay() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+        loadSchoolConfig();
+    });
+
+    // Close modal when clicking backdrop
+    document.getElementById('modalBackdrop').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+</script>
+</body>
+</html>

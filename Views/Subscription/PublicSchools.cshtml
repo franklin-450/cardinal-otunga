@@ -1,0 +1,29 @@
+@model IEnumerable<dynamic>
+
+@{
+    ViewData["Title"] = "Registered Schools";
+}
+
+<h2>Registered Schools</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>School Name</th>
+            <th>Access</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var school in Model)
+    {
+        <tr>
+            <td>@school.Name</td>
+            <td>
+                <a href="@school.Url" target="_blank">
+                    Visit Portal
+                </a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
