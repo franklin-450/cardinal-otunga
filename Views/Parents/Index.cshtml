@@ -1,6 +1,8 @@
 @{
     Layout = null;
-    var schoolName = ViewData["SchoolName"]?.ToString() ?? "School";
+    var schoolName = "Cardinal Otunga High School Mosocho";
+    var schoolMotto = "Use Common Sense";
+    var schoolColors = new { primary = "#8B1538", secondary = "#FFD700" }; // Maroon and Gold
 }
 
 <!DOCTYPE html>
@@ -14,21 +16,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.7/signalr.min.js" crossorigin="anonymous"></script>
     <style>
         :root {
-            --bg: #F1F5F9;
+            --bg: #F8F4F1;
             --surface: #FFFFFF;
-            --border: #E2E8F0;
-            --primary: #3B82F6;
-            --primary-hover: #2563EB;
-            --primary-soft: #EFF6FF;
+            --border: #E5D4C1;
+            --primary: #8B1538;
+            --primary-hover: #6B0F2A;
+            --primary-soft: #F5E8EC;
+            --secondary: #FFD700;
+            --secondary-hover: #E6C200;
+            --secondary-soft: #FFF9E6;
             --success: #10B981;
             --success-soft: #D1FAE5;
             --warning: #F59E0B;
             --warning-soft: #FEF3C7;
             --danger: #EF4444;
             --danger-soft: #FEE2E2;
-            --text-main: #0F172A;
-            --text-muted: #64748B;
-            --accent: #8B5CF6;
+            --text-main: #2C1810;
+            --text-muted: #6B5847;
         }
         
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -40,15 +44,14 @@
             background: var(--bg);
         }
         
-        /* Navigation Bar */
         .navbar {
-            background: var(--surface);
-            padding: 16px 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+            padding: 20px 24px;
+            box-shadow: 0 4px 12px rgba(139, 21, 56, 0.3);
             position: sticky;
             top: 0;
             z-index: 100;
-            border-bottom: 2px solid var(--border);
+            border-bottom: 3px solid var(--secondary);
         }
         
         .navbar-content {
@@ -62,73 +65,86 @@
         .navbar-logo {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             font-size: 1.3rem;
             font-weight: 900;
-            color: var(--primary);
+            color: white;
         }
         
         .navbar-logo span {
-            font-size: 32px;
+            font-size: 36px;
+            color: var(--secondary);
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
         
         .navbar-title {
-            font-size: 0.75rem;
-            color: var(--text-muted);
+            font-size: 0.7rem;
+            color: var(--secondary);
             text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: 1px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-top: 4px;
+        }
+        
+        .navbar-motto {
+            font-size: 0.85rem;
+            color: rgba(255, 215, 0, 0.9);
+            font-style: italic;
+            font-weight: 500;
         }
         
         .navbar-links {
             display: flex;
-            gap: 24px;
+            gap: 20px;
             align-items: center;
         }
         
         .navbar-links a {
-            color: var(--text-main);
+            color: white;
             text-decoration: none;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             transition: all 0.3s;
-            padding: 8px 12px;
+            padding: 8px 14px;
             border-radius: 8px;
         }
         
         .navbar-links a:hover {
-            background: var(--primary-soft);
-            color: var(--primary);
+            background: rgba(255, 215, 0, 0.2);
+            color: var(--secondary);
+            transform: translateY(-2px);
         }
         
         .back-home {
             display: flex;
             align-items: center;
             gap: 6px;
-            background: var(--primary-soft);
+            background: var(--secondary);
             color: var(--primary);
-            padding: 10px 16px;
+            padding: 10px 18px;
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
         }
         
         .back-home:hover {
-            background: var(--primary);
-            color: white;
-            transform: translateX(-4px);
+            background: var(--secondary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 215, 0, 0.5);
         }
         
-        /* Hero Background */
         .hero {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 50%, #5A0F23 100%);
             background-attachment: fixed;
-            min-height: 300px;
+            min-height: 320px;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
             overflow: hidden;
+            border-bottom: 5px solid var(--secondary);
         }
         
         .hero::before {
@@ -138,7 +154,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+            background: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23FFD700" fill-opacity="0.08"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
             opacity: 0.5;
             animation: float 20s infinite linear;
         }
@@ -156,33 +172,45 @@
         }
         
         .hero-icon {
-            width: 80px;
-            height: 80px;
-            background: rgba(255,255,255,0.2);
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-hover));
             border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 42px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            margin: 0 auto 24px;
+            font-size: 46px;
+            color: var(--primary);
+            box-shadow: 0 8px 32px rgba(255, 215, 0, 0.4);
             backdrop-filter: blur(10px);
+            border: 3px solid rgba(255, 215, 0, 0.3);
         }
         
         .hero-content h1 {
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             font-weight: 900;
+            margin-bottom: 8px;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            color: white;
+        }
+        
+        .hero-content .motto {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            color: var(--secondary);
+            font-style: italic;
+            font-weight: 600;
             margin-bottom: 12px;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
         
         .hero-content p {
-            font-size: 1.1rem;
-            opacity: 0.95;
+            font-size: 1rem;
+            opacity: 0.9;
             text-shadow: 0 1px 4px rgba(0,0,0,0.2);
         }
         
-        /* Main Container */
         .main-container {
             max-width: 500px;
             margin: -60px auto 0;
@@ -209,8 +237,8 @@
             background: var(--surface);
             border-radius: 24px;
             padding: 40px 28px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-            border: 2px solid var(--border);
+            box-shadow: 0 20px 60px rgba(139, 21, 56, 0.25);
+            border: 3px solid var(--border);
         }
         
         .login-header {
@@ -222,6 +250,7 @@
             font-size: 1.6rem;
             font-weight: 900;
             margin-bottom: 8px;
+            color: var(--primary);
         }
         
         .login-header p {
@@ -254,12 +283,12 @@
         .form-group input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+            box-shadow: 0 0 0 4px rgba(139, 21, 56, 0.1);
         }
         
         .login-btn {
             width: 100%;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
             color: white;
             padding: 14px;
             border: none;
@@ -268,7 +297,7 @@
             font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 8px 20px rgba(59,130,246,0.3);
+            box-shadow: 0 8px 20px rgba(139, 21, 56, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -277,7 +306,7 @@
         
         .login-btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 12px 28px rgba(59,130,246,0.4);
+            box-shadow: 0 12px 28px rgba(139, 21, 56, 0.4);
         }
         
         .login-btn:disabled {
@@ -308,7 +337,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(15,23,42,0.7);
+            background: rgba(44, 24, 16, 0.8);
             display: none;
             align-items: center;
             justify-content: center;
@@ -328,8 +357,9 @@
             padding: 32px;
             max-width: 500px;
             width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(139, 21, 56, 0.4);
             animation: scaleIn 0.3s ease;
+            border: 3px solid var(--secondary);
         }
         
         @@keyframes scaleIn {
@@ -342,13 +372,14 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 24px;
-            border-bottom: 2px solid var(--border);
+            border-bottom: 3px solid var(--border);
             padding-bottom: 16px;
         }
         
         .modal-header h2 {
             font-size: 1.5rem;
             font-weight: 800;
+            color: var(--primary);
         }
         
         .close-btn {
@@ -361,7 +392,7 @@
         }
         
         .close-btn:hover {
-            color: var(--text-main);
+            color: var(--primary);
             transform: rotate(90deg);
         }
         
@@ -378,13 +409,15 @@
             height: 120px;
             border-radius: 16px;
             object-fit: cover;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 24px rgba(139, 21, 56, 0.2);
+            border: 3px solid var(--secondary);
         }
         
         .student-info h3 {
             font-size: 1.4rem;
             font-weight: 800;
             margin-bottom: 4px;
+            color: var(--primary);
         }
         
         .student-info p {
@@ -423,16 +456,16 @@
         }
         
         .fee-section {
-            background: linear-gradient(135deg, var(--warning-soft), #FEF9E7);
+            background: linear-gradient(135deg, var(--primary-soft), #FFF5F8);
             padding: 20px;
             border-radius: 16px;
             margin-bottom: 24px;
-            border: 2px solid var(--warning);
+            border: 3px solid var(--primary);
         }
         
         .fee-section h4 {
             font-size: 0.9rem;
-            color: var(--warning);
+            color: var(--primary);
             font-weight: 700;
             margin-bottom: 8px;
             text-transform: uppercase;
@@ -441,7 +474,7 @@
         .fee-amount {
             font-size: 2rem;
             font-weight: 900;
-            color: var(--warning);
+            color: var(--primary);
             margin-bottom: 12px;
         }
         
@@ -489,14 +522,14 @@
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--accent));
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
             color: white;
-            box-shadow: 0 8px 20px rgba(59,130,246,0.3);
+            box-shadow: 0 8px 20px rgba(139, 21, 56, 0.3);
         }
         
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 28px rgba(59,130,246,0.4);
+            box-shadow: 0 12px 28px rgba(139, 21, 56, 0.4);
         }
         
         .btn-secondary {
@@ -507,6 +540,17 @@
         .btn-secondary:hover {
             background: var(--primary-soft);
             color: var(--primary);
+        }
+        
+        .btn-light {
+            background: var(--bg);
+            color: var(--text-main);
+            border: 2px solid var(--border);
+        }
+        
+        .btn-light:hover {
+            background: var(--primary-soft);
+            border-color: var(--primary);
         }
         
         .payment-form {
@@ -530,6 +574,7 @@
             justify-content: center;
             margin: 0 auto 20px;
             font-size: 56px;
+            color: var(--success);
         }
         
         .success-state h3 {
@@ -596,8 +641,8 @@
         
         @@media (max-width: 768px) {
             .navbar-links { display: none; }
-            .hero { min-height: 200px; }
-            .hero-content h1 { font-size: 1.8rem; }
+            .hero { min-height: 240px; }
+            .hero-content h1 { font-size: 2rem; }
             .main-container { margin-top: -40px; }
             .login-card { padding: 28px 20px; }
             .modal-card { padding: 20px; }
@@ -608,7 +653,6 @@
     </style>
 </head>
 <body>
-    <!-- NAVIGATION BAR -->
     <nav class="navbar">
         <div class="navbar-content">
             <div class="navbar-logo">
@@ -616,6 +660,7 @@
                 <div>
                     <div>@schoolName</div>
                     <div class="navbar-title">Parents Portal</div>
+                    <div class="navbar-motto">"@schoolMotto"</div>
                 </div>
             </div>
             <div class="navbar-links">
@@ -630,20 +675,18 @@
         </div>
     </nav>
 
-    <!-- HERO BACKGROUND -->
     <div class="hero">
         <div class="hero-content">
             <div class="hero-icon">
-                <span class="material-icons-round">security</span>
+                <span class="material-icons-round">family_restroom</span>
             </div>
             <h1>Parents Portal</h1>
-            <p>Manage your child's school fees securely</p>
+            <p class="motto">@schoolMotto</p>
+            <p>Manage your child's school fees and track their progress</p>
         </div>
     </div>
 
-    <!-- MAIN CONTENT -->
     <div class="main-container">
-        <!-- LOGIN PAGE -->
         <div class="page active" id="loginPage">
             <div class="login-card">
                 <div class="login-header">
@@ -672,7 +715,6 @@
         </div>
     </div>
 
-    <!-- STUDENT DETAILS MODAL -->
     <div class="modal-backdrop" id="studentModalBackdrop">
         <div class="modal-card">
             <div class="modal-header">
@@ -681,7 +723,7 @@
             </div>
 
             <div class="student-header">
-                <img id="studentPhoto" src="" alt="Student Photo" class="student-photo">
+                <img id="studentPhoto" src="https://via.placeholder.com/120" alt="Student Photo" class="student-photo">
                 <div class="student-info">
                     <h3 id="studentFullName"></h3>
                     <p><strong>Account No:</strong> <span id="studentAccNo"></span></p>
@@ -735,7 +777,7 @@
 
             <div id="notificationsSection" style="margin-bottom: 18px;">
                 <label style="font-weight: 700; display: block; margin-bottom: 8px;">Notifications & Progress</label>
-                <div id="notificationsList" style="background: #fff; border: 1px solid var(--border); padding: 12px; border-radius: 10px; max-height: 220px; overflow-y: auto;">
+                <div id="notificationsList" style="background: #fff; border: 2px solid var(--border); padding: 12px; border-radius: 10px; max-height: 220px; overflow-y: auto;">
                     <div id="notificationsEmpty" style="color: var(--text-muted);">No notifications yet.</div>
                 </div>
                 <div style="margin-top: 8px; display: flex; gap: 8px;">
@@ -762,7 +804,6 @@
         </div>
     </div>
 
-    <!-- PAYMENT MODAL -->
     <div class="modal-backdrop" id="paymentModalBackdrop">
         <div class="modal-card">
             <div class="modal-header">
@@ -786,7 +827,7 @@
                     </div>
                     <button type="submit" class="login-btn">
                         <span class="material-icons-round">payment</span>
-                        Initiate M-Pesa Payment
+                        Proceed to Payment
                     </button>
                 </form>
             </div>
@@ -794,37 +835,38 @@
             <div id="paymentSuccessState" style="display: none;">
                 <div class="success-state">
                     <div class="success-icon">✓</div>
-                    <h3>Payment Successful!</h3>
-                    <p>Your payment has been processed successfully</p>
-                    <div class="receipt-details">
-                        <div class="receipt-item">
-                            <span>Transaction ID:</span>
-                            <strong id="receiptTransactionId">-</strong>
-                        </div>
-                        <div class="receipt-item">
-                            <span>Student:</span>
-                            <strong id="receiptStudentName">-</strong>
-                        </div>
-                        <div class="receipt-item">
-                            <span>Date & Time:</span>
-                            <strong id="receiptDateTime">-</strong>
-                        </div>
-                        <div class="receipt-item">
-                            <span>Payment Method:</span>
-                            <strong>M-Pesa</strong>
-                        </div>
-                        <div class="receipt-item">
-                            <span>Reference:</span>
-                            <strong id="receiptReference">-</strong>
-                        </div>
-                        <div class="receipt-item total">
-                            <span>Amount Paid:</span>
-                            <span id="receiptAmount">KSH 0</span>
-                        </div>
+                    <h3>Payment Initiated</h3>
+                    <p>Check your phone for the Mpesa prompt</p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 12px;">
+                        Transaction ID: <strong id="paymentTransactionId">-</strong>
+                    </p>
+                </div>
+                <div class="receipt-details">
+                    <div class="receipt-item">
+                        <label>Amount:</label>
+                        <span id="receiptAmount">KSH 0</span>
                     </div>
-                    <button class="download-btn" onclick="downloadReceipt()">
-                        <span class="material-icons-round">download</span>
-                        Download Receipt
+                    <div class="receipt-item">
+                        <label>Student:</label>
+                        <span id="receiptStudent">-</span>
+                    </div>
+                    <div class="receipt-item">
+                        <label>School:</label>
+                        <span>Cardinal Otunga High School</span>
+                    </div>
+                    <div class="receipt-item">
+                        <label>Date:</label>
+                        <span id="receiptDate">-</span>
+                    </div>
+                </div>
+                <button class="download-btn" onclick="downloadReceipt()">
+                    <span class="material-icons-round">download</span>
+                    Download Receipt
+                </button>
+                <div style="margin-top: 16px;">
+                    <button class="btn btn-secondary" onclick="closePaymentModal()" style="width: 100%;">
+                        <span class="material-icons-round">close</span>
+                        Done
                     </button>
                 </div>
             </div>
@@ -833,316 +875,322 @@
 
     <script>
         let currentStudent = null;
-        const schoolName = '@schoolName';
+        let connection = null;
 
-        function goHome() {
-            window.location.href = '/';
+        // Initialize SignalR connection for real-time notifications
+        function initializeSignalR() {
+            if (!currentStudent) return;
+            
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/notificationHub")
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("ReceiveNotification", (accountNo, message) => {
+                if (accountNo === currentStudent.accountNo) {
+                    refreshNotifications();
+                }
+            });
+
+            connection.start().catch(err => console.log('SignalR connection error:', err));
         }
 
-        async function handleLogin(e) {
-            e.preventDefault();
-            const accountNo = document.getElementById('accountNo').value;
-            const studentName = document.getElementById('studentName').value;
-            const btn = document.querySelector('.login-btn');
+        async function handleLogin(event) {
+            event.preventDefault();
             
-            btn.disabled = true;
-            btn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> Verifying...';
-
+            const accountNo = document.getElementById('accountNo').value.trim();
+            const studentName = document.getElementById('studentName').value.trim();
+            const errorElement = document.getElementById('loginError');
+            const loginBtn = document.querySelector('.login-btn');
+            
             try {
-                const response = await fetch(`/${schoolName}/parent/api/student-login`, {
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<span class="material-icons-round">hourglass_bottom</span> Verifying...';
+                
+                // Fetch student data from backend
+                const response = await fetch('/Parents/GetStudent', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ accountNo, studentName })
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        accountNumber: accountNo,
+                        studentName: studentName
+                    })
                 });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    currentStudent = data.student;
-                    displayStudentDetails(data.student);
-                    openStudentModal();
-                    document.getElementById('loginError').classList.remove('show');
-                } else {
-                    showLoginError(data.message || 'Invalid credentials');
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    errorElement.classList.add('show');
+                    document.getElementById('loginErrorText').textContent = errorData.message || 'Login failed. Please try again.';
+                    return;
                 }
+
+                const student = await response.json();
+                errorElement.classList.remove('show');
+                currentStudent = { accountNo: accountNo, ...student };
+                
+                // Load student details and show modal
+                loadStudentDetails(currentStudent);
+                showStudentModal();
+                initializeSignalR();
             } catch (error) {
-                showLoginError('Connection error. Please try again.');
-                console.error(error);
+                console.error('Login error:', error);
+                errorElement.classList.add('show');
+                document.getElementById('loginErrorText').textContent = 'Connection error. Please check your internet and try again.';
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<span class="material-icons-round">login</span> Access Portal';
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<span class="material-icons-round">login</span> Access Portal';
             }
         }
 
-        function showLoginError(message) {
-            const errorEl = document.getElementById('loginError');
-            document.getElementById('loginErrorText').textContent = message;
-            errorEl.classList.add('show');
-        }
-
-        function displayStudentDetails(student) {
-            document.getElementById('studentPhoto').src = student.photoPath || 'https://via.placeholder.com/120';
+        function loadStudentDetails(student) {
             document.getElementById('studentFullName').textContent = student.fullName;
             document.getElementById('studentAccNo').textContent = student.accountNo;
             document.getElementById('studentGrade').textContent = student.grade;
             document.getElementById('studentGender').textContent = student.gender;
             document.getElementById('studentStatus').textContent = student.status;
-            document.getElementById('studentDOB').textContent = new Date(student.dateOfBirth).toLocaleDateString();
-            document.getElementById('studentStream').textContent = student.stream || '-';
-            document.getElementById('studentAdmissionDate').textContent = new Date(student.admissionDate).toLocaleDateString();
-            document.getElementById('studentPrevSchool').textContent = student.previousSchool || '-';
-
-            document.getElementById('feeTotalDue').textContent = `KSH ${student.fees?.totalDue || 0}`;
-            document.getElementById('feeAmountPaid').textContent = `KSH ${student.fees?.amountPaid || 0}`;
-            document.getElementById('feeTerm1').textContent = `KSH ${student.fees?.term1 || 0}`;
-            document.getElementById('feeTerm2').textContent = `KSH ${student.fees?.term2 || 0}`;
-            document.getElementById('feeBalance').textContent = `KSH ${student.fees?.balance || 0}`;
-
+            document.getElementById('studentDOB').textContent = formatDate(student.dob);
+            document.getElementById('studentStream').textContent = student.stream;
+            document.getElementById('studentAdmissionDate').textContent = formatDate(student.admissionDate);
+            document.getElementById('studentPrevSchool').textContent = student.previousSchool;
+            document.getElementById('studentPhoto').src = student.photo;
+            
+            // Load fee information
+            const fees = student.feeData;
+            document.getElementById('feeBalance').textContent = `KSH ${fees.balance.toLocaleString()}`;
+            document.getElementById('feeTotalDue').textContent = `KSH ${fees.totalDue.toLocaleString()}`;
+            document.getElementById('feeAmountPaid').textContent = `KSH ${fees.amountPaid.toLocaleString()}`;
+            document.getElementById('feeTerm1').textContent = `KSH ${fees.term1.toLocaleString()}`;
+            document.getElementById('feeTerm2').textContent = `KSH ${fees.term2.toLocaleString()}`;
+            
+            // Load medical information
             if (student.medicalInfo) {
-                document.getElementById('studentMedicalInfo').textContent = student.medicalInfo;
                 document.getElementById('medicalInfoSection').style.display = 'block';
+                document.getElementById('studentMedicalInfo').textContent = student.medicalInfo;
             }
-
-            document.getElementById('paymentAccountNo').value = student.accountNo;
-
-            // Fetch and display notifications related to this student
+            
             refreshNotifications();
         }
 
-        function openStudentModal() {
+        async function refreshNotifications() {
+            if (!currentStudent) return;
+            
+            try {
+                const response = await fetch(`/Parents/GetNotifications?accountNumber=${currentStudent.accountNo}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch notifications');
+                }
+                
+                const notifications = await response.json();
+                const notificationsList = document.getElementById('notificationsList');
+                
+                if (!notifications || notifications.length === 0) {
+                    notificationsList.innerHTML = '<div id="notificationsEmpty" style="color: var(--text-muted);">No notifications yet.</div>';
+                    return;
+                }
+                
+                notificationsList.innerHTML = notifications.map(notif => `
+                    <div style="padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; ${notif.isRead ? 'opacity: 0.7;' : 'font-weight: 600;'}">
+                        <div style="display: flex; gap: 8px; margin-bottom: 4px;">
+                            <span class="material-icons-round" style="font-size: 16px; color: ${getNotificationColor(notif.type)};">
+                                ${getNotificationIcon(notif.type)}
+                            </span>
+                            <span>${notif.message}</span>
+                        </div>
+                        <span style="color: var(--text-muted); font-size: 0.75rem;">${formatDate(notif.dateCreated)}</span>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error fetching notifications:', error);
+                document.getElementById('notificationsList').innerHTML = '<div style="color: var(--text-muted);">Unable to load notifications.</div>';
+            }
+        }
+
+        function getNotificationIcon(type) {
+            switch(type) {
+                case 'progress': return 'trending_up';
+                case 'fee': return 'payment';
+                case 'info': return 'info';
+                default: return 'notifications';
+            }
+        }
+
+        function getNotificationColor(type) {
+            switch(type) {
+                case 'progress': return 'var(--success)';
+                case 'fee': return 'var(--warning)';
+                case 'info': return 'var(--primary)';
+                default: return 'var(--text-muted)';
+            }
+        }
+
+        async function markAllNotificationsRead() {
+            if (!currentStudent) return;
+            
+            try {
+                const response = await fetch('/Parents/MarkNotificationsRead', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        accountNumber: currentStudent.accountNo
+                    })
+                });
+                
+                if (response.ok) {
+                    refreshNotifications();
+                }
+            } catch (error) {
+                console.error('Error marking notifications as read:', error);
+            }
+        }
+
+        function showStudentModal() {
             document.getElementById('studentModalBackdrop').classList.add('active');
         }
 
         function closeStudentModal() {
             document.getElementById('studentModalBackdrop').classList.remove('active');
+            document.getElementById('studentModalBackdrop').addEventListener('click', function(e) {
+                if (e.target.id === 'studentModalBackdrop') {
+                    this.classList.remove('active');
+                }
+            }, { once: true });
         }
 
         function openPaymentModal() {
+            if (!currentStudent) return;
+            document.getElementById('paymentAccountNo').value = currentStudent.accountNo;
+            document.getElementById('paymentAmount').value = currentStudent.feeData.balance;
             document.getElementById('paymentModalBackdrop').classList.add('active');
-            document.getElementById('paymentFormState').style.display = 'block';
-            document.getElementById('paymentSuccessState').style.display = 'none';
         }
 
         function closePaymentModal() {
             document.getElementById('paymentModalBackdrop').classList.remove('active');
+            document.getElementById('paymentFormState').style.display = 'block';
+            document.getElementById('paymentSuccessState').style.display = 'none';
+            document.getElementById('paymentForm').reset();
         }
 
-        // =========================
-        // Notifications client helpers
-        // =========================
-        async function refreshNotifications() {
-            if (!currentStudent || !currentStudent.id) return;
-            await fetchNotifications(currentStudent.id);
-        }
-
-        async function fetchNotifications(studentId) {
-            try {
-                const resp = await fetch(`/${schoolName}/parent/api/notifications?studentId=${studentId}`);
-                const data = await resp.json();
-                if (data.success) {
-                    renderNotifications(data.notifications || []);
-                } else {
-                    console.warn('Failed to load notifications', data.message);
-                }
-            } catch (err) {
-                console.error('Error fetching notifications', err);
-            }
-        }
-
-        function renderNotifications(list) {
-            const container = document.getElementById('notificationsList');
-            container.innerHTML = '';
-            if (!list || list.length === 0) {
-                container.innerHTML = '<div id="notificationsEmpty" style="color: var(--text-muted);">No notifications yet.</div>';
+        async function handlePayment(event) {
+            event.preventDefault();
+            
+            const amount = parseFloat(document.getElementById('paymentAmount').value);
+            const phone = document.getElementById('paymentPhone').value.trim();
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            
+            if (amount <= 0) {
+                alert('Please enter a valid amount');
                 return;
             }
-            list.forEach(n => {
-                const el = document.createElement('div');
-                el.style.padding = '10px 12px';
-                el.style.borderBottom = '1px dashed var(--border)';
-                el.style.display = 'flex';
-                el.style.justifyContent = 'space-between';
-                el.style.alignItems = 'center';
-
-                const left = document.createElement('div');
-                left.style.flex = '1';
-                left.innerHTML = `<strong style="display:block">${n.title || n.type || 'Notice'}</strong><small style="color:var(--text-muted);">${new Date(n.createdAt).toLocaleString()}</small><div style="margin-top:6px;">${n.message}</div>`;
-
-                const right = document.createElement('div');
-                right.style.marginLeft = '12px';
-                right.innerHTML = `<button class="btn btn-light" style="padding:6px 8px;" onclick="markNotificationsRead([${n.id}])">Mark read</button>`;
-
-                if (n.isRead) {
-                    el.style.opacity = '0.6';
-                } else {
-                    el.style.background = 'linear-gradient(90deg, rgba(59,130,246,0.03), transparent)';
-                }
-
-                el.appendChild(left);
-                el.appendChild(right);
-                container.appendChild(el);
-            });
-
-            // If SignalR enabled, open connection to listen for new notifications for this student
-            if (window.signalRConnection && currentStudent && currentStudent.id) {
-                const group = `student_${currentStudent.id}`;
-                window.signalRConnection.invoke('SubscribeToStudent', group).catch(e => console.warn('SignalR subscribe failed', e));
-            } else {
-                // Try to initialize SignalR connection (optional)
-                if (typeof signalR !== 'undefined') setupSignalR();
+            
+            if (!phone.match(/^(\+254|0)[17]\d{8}$/)) {
+                alert('Please enter a valid Kenyan phone number (e.g., +2547XX XXX XXX or 07XX XXX XXX)');
+                return;
             }
-        }
-
-        async function markNotificationsRead(ids) {
-            if (!currentStudent || !currentStudent.id) return;
+            
             try {
-                const resp = await fetch(`/${schoolName}/parent/api/notifications/mark-read`, {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="material-icons-round">hourglass_bottom</span> Processing...';
+                
+                // Send payment request to backend
+                const response = await fetch('/Parents/InitiatePayment', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ studentId: currentStudent.id, notificationIds: ids })
-                });
-                const data = await resp.json();
-                if (data.success) refreshNotifications();
-            } catch (err) {
-                console.error('Error marking notifications', err);
-            }
-        }
-
-        async function markAllNotificationsRead() {
-            const container = document.getElementById('notificationsList');
-            const ids = Array.from(container.querySelectorAll('button[onclick]'))
-                .map(btn => {
-                    const match = btn.getAttribute('onclick').match(/markNotificationsRead\(\[(\d+)\]\)/);
-                    return match ? parseInt(match[1]) : null;
-                }).filter(x => x);
-            if (ids.length === 0) return;
-            await markNotificationsRead(ids);
-        }
-
-        async function handlePayment(e) {
-            e.preventDefault();
-            const amount = document.getElementById('paymentAmount').value;
-            const phone = document.getElementById('paymentPhone').value;
-            const btn = document.querySelector('#paymentForm button');
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> Processing...';
-
-            try {
-                const response = await fetch(`/${schoolName}/parent/api/initiate-payment`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify({
-                        studentId: currentStudent.id,
-                        accountNo: currentStudent.accountNo,
-                        amount: parseInt(amount),
-                        phone
+                        accountNumber: currentStudent.accountNo,
+                        amount: amount,
+                        phoneNumber: phone
                     })
                 });
 
-                const data = await response.json();
-
-                if (data.success) {
-                    showPaymentSuccess(data);
-                } else {
-                    alert('Payment failed: ' + (data.message || 'Unknown error'));
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(errorData.message || 'Payment failed. Please try again.');
+                    return;
                 }
+
+                const paymentData = await response.json();
+                showPaymentSuccess(amount, paymentData.transactionId || 'CARDIN' + Math.random().toString(36).substr(2, 9).toUpperCase());
             } catch (error) {
-                alert('Payment error: ' + error.message);
-                console.error(error);
+                console.error('Payment error:', error);
+                alert('Connection error. Please check your internet and try again.');
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<span class="material-icons-round">payment</span> Initiate M-Pesa Payment';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span class="material-icons-round">payment</span> Proceed to Payment';
             }
         }
 
-        function showPaymentSuccess(data) {
+        function showPaymentSuccess(amount, transactionId) {
             document.getElementById('paymentFormState').style.display = 'none';
             document.getElementById('paymentSuccessState').style.display = 'block';
-
-            const now = new Date();
-            document.getElementById('receiptTransactionId').textContent = data.transactionId || 'TXN' + Date.now();
-            document.getElementById('receiptStudentName').textContent = currentStudent.fullName;
-            document.getElementById('receiptDateTime').textContent = now.toLocaleString();
-            document.getElementById('receiptReference').textContent = data.reference || 'N/A';
-            document.getElementById('receiptAmount').textContent = `KSH ${data.amount}`;
+            
+            document.getElementById('paymentTransactionId').textContent = transactionId;
+            document.getElementById('receiptAmount').textContent = `KSH ${amount.toLocaleString()}`;
+            document.getElementById('receiptStudent').textContent = currentStudent.fullName;
+            document.getElementById('receiptDate').textContent = formatDate(new Date());
         }
 
-        async function downloadReceipt() {
-            const resp = await fetch(`/${schoolName}/parent/api/notifications?studentId=${currentStudent.id}`);
-            const data = await resp.json();
-            // For auditing, we could attach latest notification summary to receipt (optional)
-            const receiptHTML = `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Payment Receipt</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
-        .receipt { max-width: 500px; margin: 0 auto; background: white; border: 2px solid #333; padding: 30px; border-radius: 12px; }
-        .receipt h1 { text-align: center; margin-bottom: 30px; color: #333; font-size: 28px; }
-        .school-name { text-align: center; font-size: 14px; color: #666; margin-bottom: 20px; text-transform: uppercase; font-weight: bold; }
-        .receipt-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd; }
-        .receipt-item.total { border-top: 2px solid #333; font-weight: bold; font-size: 1.2em; color: #10B981; padding-top: 12px; }
-        .receipt-item:last-child { border-bottom: none; }
-        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 0.9em; border-top: 2px solid #ddd; padding-top: 20px; }
-    </style>
-</head>
-<body>
-    <div class="receipt">
-        <div class="school-name">@schoolName - Parents Portal</div>
-        <h1>Payment Receipt</h1>
-        <div class="receipt-item">
-            <span>Transaction ID:</span>
-            <strong>${document.getElementById('receiptTransactionId').textContent}</strong>
-        </div>
-        <div class="receipt-item">
-            <span>Student Name:</span>
-            <strong>${document.getElementById('receiptStudentName').textContent}</strong>
-        </div>
-        <div class="receipt-item">
-            <span>Date & Time:</span>
-            <strong>${document.getElementById('receiptDateTime').textContent}</strong>
-        </div>
-        <div class="receipt-item">
-            <span>Payment Method:</span>
-            <strong>M-Pesa</strong>
-        </div>
-        <div class="receipt-item">
-            <span>Reference:</span>
-            <strong>${document.getElementById('receiptReference').textContent}</strong>
-        </div>
-        <div class="receipt-item total">
-            <span>Amount Paid:</span>
-            <span>${document.getElementById('receiptAmount').textContent}</span>
-        </div>
-        <div class="footer">
-            <p>Thank you for your payment!</p>
-            <p>This is an automated receipt generated on ${new Date().toLocaleDateString()}</p>
-            <p>For inquiries, contact the school office</p>
-        </div>
-    </div>
-</body>
-</html>`;
-
-            const blob = new Blob([receiptHTML], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.setAttribute('href', url);
-            link.setAttribute('download', `receipt_${currentStudent.accountNo}_${Date.now()}.html`);
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+        function downloadReceipt() {
+            const transactionId = document.getElementById('paymentTransactionId').textContent;
+            const amount = document.getElementById('receiptAmount').textContent;
+            const student = document.getElementById('receiptStudent').textContent;
+            const date = document.getElementById('receiptDate').textContent;
+            
+            const receiptContent = `
+            CARDINAL OTUNGA HIGH SCHOOL MOSOCHO
+            Payment Receipt
+            
+            Transaction ID: ${transactionId}
+            Date: ${date}
+            Student: ${student}
+            Amount: ${amount}
+            School: Cardinal Otunga High School Mosocho
+            
+            Thank you for your payment.
+            `;
+            
+            const blob = new Blob([receiptContent], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Receipt_${transactionId}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
         }
 
-        document.getElementById('studentModalBackdrop').addEventListener('click', function(e) {
-            if (e.target === this) closeStudentModal();
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function goHome() {
+            window.location.href = '/';
+        }
+
+        // Close modals on backdrop click
+        document.getElementById('studentModalBackdrop')?.addEventListener('click', (e) => {
+            if (e.target.id === 'studentModalBackdrop') {
+                closeStudentModal();
+            }
         });
 
-        document.getElementById('paymentModalBackdrop').addEventListener('click', function(e) {
-            if (e.target === this) closePaymentModal();
+        document.getElementById('paymentModalBackdrop')?.addEventListener('click', (e) => {
+            if (e.target.id === 'paymentModalBackdrop') {
+                closePaymentModal();
+            }
+        });
+
+        // Clear login form on page load
+        window.addEventListener('load', () => {
+            document.getElementById('loginForm').reset();
         });
     </script>
 </body>

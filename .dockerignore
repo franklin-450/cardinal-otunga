@@ -1,0 +1,14 @@
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/bin
+**/obj
+**/*.user
+**/.DS_Store
+**/.env
+**/node_modules
+**/dist
+**/coverage
+**/.nuget/packages
+**/.nuget/NuGet.Config

@@ -1,0 +1,559 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Identity;
+using Npgsql;
+using System;
+using System.Net;
+using System.Net.Mail;
+using System.Collections.Generic;
+using EduTrackTrial.Models;
+using System.Text.Json;
+
+namespace EduTrackTrial.Controllers
+{
+    public class SubscriptionController : Controller
+    {
+        private readonly string _conn;
+        private readonly IConfiguration _config;
+        private readonly PasswordHasher<string> _hasher;
+
+        public SubscriptionController(IConfiguration config)
+        {
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+            _conn =
+                "Host=localhost;" +
+                "Username=postgres;" +
+                "Password=pc(fa)@2025;" +
+                "Database=MultiTenantDB;" +
+                "Timeout=15;" +
+                "CommandTimeout=30;";
+            _hasher = new PasswordHasher<string>();
+        }
+
+        // =========================
+        // SUBSCRIBE PAGE
+        // =========================
+        [HttpGet("/subscribe")]
+        public IActionResult Index()
+        {
+            Console.WriteLine("[SUBSCRIBE] Page accessed");
+            return View();
+        }
+
+        // =========================
+        // SUBSCRIBE POST
+        // =========================
+        [HttpPost("/subscribe")]
+        public IActionResult Subscribe(SubscriptionRequest request)
+        {
+            Console.WriteLine($"[SUBSCRIBE] Attempt: {request?.SchoolName}");
+
+            if (request == null)
+                return Json(new { success = false, message = "Invalid request." });
+
+            if (string.IsNullOrWhiteSpace(request.SchoolGender))
+                return Json(new { success = false, message = "School gender is required." });
+
+            if (string.IsNullOrWhiteSpace(request.SchoolName) ||
+                string.IsNullOrWhiteSpace(request.AdminEmail) ||
+                string.IsNullOrWhiteSpace(request.Password) ||
+                request.PlanAmount <= 0 ||
+                request.Grades == null || request.Grades.Count == 0)
+                return Json(new { success = false, message = "Missing required fields or grades." });
+
+            using var conn = new NpgsqlConnection(_conn);
+            conn.Open();
+
+            try
+            {
+                // =========================
+                // Determine lowest available ID
+                // =========================
+                int tenantId;
+                using (var idCmd = new NpgsqlCommand(@"
+                    SELECT COALESCE(
+                        (SELECT MIN(t1.id + 1)
+                         FROM tenants t1
+                         WHERE NOT EXISTS (
+                             SELECT 1 FROM tenants t2 WHERE t2.id = t1.id + 1
+                         )
+                        ), 1) AS next_id;
+                ", conn))
+                {
+                    var result = idCmd.ExecuteScalar();
+                    tenantId = (result != DBNull.Value) ? Convert.ToInt32(result) : 1;
+                }
+
+                // =========================
+                // Prepare school data
+                // =========================
+                string schoolName = request.SchoolName.Trim();
+                string subdomain = SanitizeSubdomain(schoolName);
+
+                if (SubdomainExists(subdomain, conn))
+                    return Json(new { success = false, message = "School already exists." });
+
+                string email = request.AdminEmail.Trim().ToLowerInvariant();
+                string passwordHash = _hasher.HashPassword(email, request.Password);
+                string verificationCode = GenerateCode();
+
+                // =========================
+                // INSERT TENANT
+                // =========================
+                var tenantCmd = new NpgsqlCommand(@"
+INSERT INTO tenants
+(id, name, subdomain, email, password_hash, plan_amount, trial_expires_at, verified, school_gender, created_at)
+VALUES (@id, @name, @sub, @email, @hash, @plan, @trial, false, @gender, NOW())
+RETURNING id;", conn);
+
+                tenantCmd.Parameters.AddWithValue("id", tenantId);
+                tenantCmd.Parameters.AddWithValue("name", schoolName);
+                tenantCmd.Parameters.AddWithValue("sub", subdomain);
+                tenantCmd.Parameters.AddWithValue("email", email);
+                tenantCmd.Parameters.AddWithValue("hash", passwordHash);
+                tenantCmd.Parameters.AddWithValue("plan", request.PlanAmount);
+                tenantCmd.Parameters.AddWithValue("trial", DateTime.UtcNow.AddDays(7));
+                tenantCmd.Parameters.AddWithValue("gender", request.SchoolGender);
+
+                tenantId = (int)tenantCmd.ExecuteScalar();
+
+                // =========================
+                // STORE VERIFICATION CODE
+                // =========================
+                var verCmd = new NpgsqlCommand(@"
+INSERT INTO tenant_verifications (tenant_id, code, expires_at)
+VALUES (@tid, @code, @exp)
+ON CONFLICT (tenant_id)
+DO UPDATE SET code = EXCLUDED.code, expires_at = EXCLUDED.expires_at;", conn);
+
+                verCmd.Parameters.AddWithValue("tid", tenantId);
+                verCmd.Parameters.AddWithValue("code", verificationCode);
+                verCmd.Parameters.AddWithValue("exp", DateTime.UtcNow.AddMinutes(10));
+                verCmd.ExecuteNonQuery();
+
+                // =========================
+                // STORE GRADES IN TempData (for verification seeding)
+                // =========================
+                TempData["SubscriptionGrades"] = JsonSerializer.Serialize(request.Grades);
+
+                // =========================
+                // EMAIL VERIFICATION
+                // =========================
+                if (SmtpConfigured())
+                {
+                    SendVerificationEmail(
+                        email,
+                        schoolName,
+                        verificationCode,
+                        subdomain,
+                        request.PlanAmount
+                    );
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    tenantId,
+                    subdomain,
+                    message = "Verification code sent. Trial activated for 7 days."
+                });
+            }
+            catch (PostgresException pg)
+            {
+                Console.WriteLine($"[DB ERROR] {pg.Message}");
+                return Json(new { success = false, message = "School already exists." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] {ex.Message}");
+                return Json(new { success = false, message = "Subscription failed." });
+            }
+        }
+
+        // =========================
+        // VERIFY ACCOUNT
+        // =========================
+        [HttpGet("/subscribe/verify")]
+        public IActionResult Verify(string email, string code)
+        {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(code))
+                return Content("Missing email or verification code.");
+
+            email = email.Trim().ToLowerInvariant();
+
+            using var conn = new NpgsqlConnection(_conn);
+            conn.Open();
+
+            try
+            {
+                var cmd = new NpgsqlCommand(@"
+SELECT t.id, t.subdomain, v.id, v.code, v.expires_at
+FROM tenants t
+JOIN tenant_verifications v ON v.tenant_id = t.id
+WHERE t.email = @email;", conn);
+
+                cmd.Parameters.AddWithValue("email", email);
+
+                using var reader = cmd.ExecuteReader();
+                if (!reader.Read())
+                    return Content("Tenant not found.");
+
+                int tenantId = reader.GetInt32(0);
+                string subdomain = reader.GetString(1);
+                int verificationId = reader.GetInt32(2);
+                string storedCode = reader.GetString(3);
+                DateTime expiresAt = reader.GetDateTime(4);
+                reader.Close();
+
+                if (!string.Equals(code.Trim(), storedCode.Trim(), StringComparison.Ordinal))
+                    return Content("Invalid verification code.");
+
+                if (DateTime.UtcNow > expiresAt)
+                    return Content("Verification code expired.");
+
+                // Activate tenant
+                new NpgsqlCommand(
+                    "UPDATE tenants SET verified = true WHERE id = @id",
+                    conn)
+                { Parameters = { new("id", tenantId) } }
+                .ExecuteNonQuery();
+
+                // Cleanup verification record
+                new NpgsqlCommand(
+                    "DELETE FROM tenant_verifications WHERE id = @id",
+                    conn)
+                { Parameters = { new("id", verificationId) } }
+                .ExecuteNonQuery();
+
+                // Create tenant schema
+                CreateTenantSchema(conn, subdomain);
+
+                // Seed grades from TempData
+                if (TempData["SubscriptionGrades"] is string gradesJson)
+                {
+                    var grades = JsonSerializer.Deserialize<List<GradeSeedDto>>(gradesJson);
+                    if (grades != null && grades.Count > 0)
+                    {
+                        SeedGrades(conn, $"tenant_{subdomain}", grades);
+                    }
+                }
+
+                return Redirect($"http://localhost:5201/{subdomain}/login");
+            }
+            catch (Exception ex)
+            {
+                return Content($"Verification failed: {ex.Message}");
+            }
+        }
+
+        // =========================
+        // CREATE TENANT SCHEMA
+        // =========================
+        private void CreateTenantSchema(NpgsqlConnection conn, string subdomain)
+        {
+            string schema = $"tenant_{subdomain}";
+
+            string sql = $@"
+CREATE SCHEMA IF NOT EXISTS ""{schema}"";
+
+CREATE TABLE IF NOT EXISTS ""{schema}"".""Students"" (
+    id SERIAL PRIMARY KEY,
+    account_no VARCHAR(50) UNIQUE NOT NULL,
+    full_name TEXT NOT NULL,
+    date_of_birth DATE NOT NULL,
+    gender VARCHAR(10),
+    grade VARCHAR(50) NOT NULL,
+    stream VARCHAR(50),
+    admission_date DATE NOT NULL,
+    previous_school TEXT,
+    photo_path TEXT,
+    medical_info TEXT,
+    status VARCHAR(30) DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS ""{schema}"".""Guardians"" (
+    id SERIAL PRIMARY KEY,
+    student_id INT NOT NULL REFERENCES ""{schema}"".""Students""(id) ON DELETE CASCADE,
+    full_name TEXT NOT NULL,
+    relationship VARCHAR(30) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    email TEXT,
+    address TEXT,
+    is_primary BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS ""{schema}"".""Grades"" (
+    id SERIAL PRIMARY KEY,
+    grade_name VARCHAR(50) UNIQUE NOT NULL,
+    term1_fee INT NOT NULL,
+    term2_fee INT NOT NULL,
+    term3_fee INT NOT NULL,
+    streams TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS ""{schema}"".""Streams"" (
+    id SERIAL PRIMARY KEY,
+    grade_name VARCHAR(50) NOT NULL,
+    stream_name VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT uq_grade_stream UNIQUE (grade_name, stream_name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_students_grade
+    ON ""{schema}"".""Students"" (grade);
+
+CREATE INDEX IF NOT EXISTS idx_guardians_phone
+    ON ""{schema}"".""Guardians"" (phone);
+";
+
+            using var cmd = new NpgsqlCommand(sql, conn);
+            cmd.ExecuteNonQuery();
+
+            Console.WriteLine($"[TENANT] Schema created: {schema}");
+        }
+
+        // =========================
+        // SEED GRADES
+        // =========================
+        private void SeedGrades(NpgsqlConnection conn, string schema, List<GradeSeedDto> grades)
+        {
+            if (grades == null || grades.Count == 0)
+                throw new Exception("No grades provided for seeding.");
+
+            var checkCmd = new NpgsqlCommand(
+                $@"SELECT COUNT(*) FROM ""{schema}"".""Grades"";",
+                conn
+            );
+
+            long existingCount = (long)checkCmd.ExecuteScalar();
+            if (existingCount > 0)
+            {
+                Console.WriteLine($"[TENANT] Grades already exist for {schema}. Skipping seeding.");
+                return;
+            }
+
+            foreach (var grade in grades)
+            {
+                string streamsCsv = (grade.Streams != null && grade.Streams.Count > 0)
+                    ? string.Join(",", grade.Streams)
+                    : "NON";
+
+                var insertCmd = new NpgsqlCommand($@"
+INSERT INTO ""{schema}"".""Grades""
+(grade_name, term1_fee, term2_fee, term3_fee, streams)
+VALUES
+(@gradeName, @term1, @term2, @term3, @streams);
+", conn);
+
+                insertCmd.Parameters.AddWithValue("gradeName", grade.GradeName);
+                insertCmd.Parameters.AddWithValue("term1", grade.Term1Fee);
+                insertCmd.Parameters.AddWithValue("term2", grade.Term2Fee);
+                insertCmd.Parameters.AddWithValue("term3", grade.Term3Fee);
+                insertCmd.Parameters.AddWithValue("streams", streamsCsv);
+
+                insertCmd.ExecuteNonQuery();
+            }
+
+            Console.WriteLine($"[TENANT] Seeded {grades.Count} grades for {schema}");
+        }
+
+        // =========================
+        // HELPERS
+        // =========================
+        private static string SanitizeSubdomain(string schoolName)
+        {
+            if (string.IsNullOrWhiteSpace(schoolName))
+                throw new ArgumentException("School name cannot be empty");
+
+            return schoolName
+                .Trim()
+                .ToLowerInvariant()
+                .Replace(" ", "")
+                .Replace(".", "")
+                .Replace("-", "")
+                .Replace("_", "");
+        }
+
+        private bool SubdomainExists(string subdomain, NpgsqlConnection conn)
+        {
+            using var cmd = new NpgsqlCommand(
+                "SELECT 1 FROM tenants WHERE subdomain = @s",
+                conn);
+            cmd.Parameters.AddWithValue("s", subdomain);
+            return cmd.ExecuteScalar() != null;
+        }
+
+        private static string GenerateCode() =>
+            Random.Shared.Next(100000, 999999).ToString();
+
+        private bool SmtpConfigured() =>
+            !string.IsNullOrWhiteSpace(_config["Smtp:User"]) &&
+            !string.IsNullOrWhiteSpace(_config["Smtp:Pass"]);
+
+        private void SendVerificationEmail(
+            string to,
+            string schoolName,
+            string code,
+            string subdomain,
+            decimal planAmount)
+        {
+            try
+            {
+                var smtpUser = _config["Smtp:User"];
+                var smtpPass = _config["Smtp:Pass"];
+
+                using var smtp = new SmtpClient("smtp.gmail.com", 587)
+                {
+                    Credentials = new NetworkCredential(smtpUser, smtpPass),
+                    EnableSsl = true
+                };
+
+                var verifyLink =
+                    $"http://localhost:5201/subscribe/verify" +
+                    $"?email={Uri.EscapeDataString(to)}&code={Uri.EscapeDataString(code)}";
+
+                var message = new MailMessage
+                {
+                    From = new MailAddress(smtpUser, "EduTrack"),
+                    Subject = "Verify Your EduTrack Account",
+                    IsBodyHtml = true,
+                                      Body = $@"
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>EduTrack Verification</title>
+<style>
+body, html {{
+    margin:0;
+    padding:0;
+    font-family:'Segoe UI',sans-serif;
+    background:#f4f4f4;
+}}
+.container {{
+    max-width:600px;
+    margin:30px auto;
+    background:#fff;
+    border-radius:10px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.1);
+}}
+.header {{
+    background:#2E86C1;
+    color:#fff;
+    padding:25px;
+    text-align:center;
+}}
+.header h1 {{
+    margin:0;
+    font-size:22px;
+}}
+.content {{
+    padding:25px;
+    color:#333;
+    font-size:14px;
+    line-height:1.6;
+}}
+.code {{
+    font-size:24px;
+    font-weight:bold;
+    color:#2E86C1;
+    text-align:center;
+    margin:20px 0;
+    letter-spacing:2px;
+}}
+.btn {{
+    display:inline-block;
+    background:#2E86C1;
+    color:#fff;
+    padding:12px 25px;
+    border-radius:6px;
+    font-weight:bold;
+    text-decoration:none;
+}}
+.btn:hover {{
+    background:#1B4F72;
+}}
+.footer {{
+    font-size:12px;
+    color:#888;
+    text-align:center;
+    margin-top:30px;
+}}
+@media only screen and (max-width:480px) {{
+    .content {{ padding:20px; font-size:13px; }}
+    .header h1 {{ font-size:20px; }}
+    .code {{ font-size:22px; }}
+    .btn {{ padding:10px 18px; font-size:14px; }}
+}}
+</style>
+</head>
+<body>
+<div class='container'>
+    <div class='header'>
+        <h1>EduTrack Account Verification</h1>
+    </div>
+    <div class='content'>
+        <p>Hello <strong>{schoolName}</strong>,</p>
+
+        <p>Please use the verification code below to activate your account:</p>
+
+        <div class='code'>{code}</div>
+
+        <p>This code expires in <strong>10 minutes</strong>.</p>
+
+        <hr/>
+
+        <p><strong>School Subdomain:</strong> {subdomain}</p>
+        <p><strong>Plan Amount:</strong> KES {planAmount:N0}</p>
+
+        <p style='text-align:center; margin-top:20px;'>
+            <a href='{verifyLink}' class='btn'>Verify My Account</a>
+        </p>
+
+        <p>If you did not initiate this request, you may safely ignore this email.</p>
+
+        <div class='footer'>
+            EduTrack Team &copy; 2025
+        </div>
+    </div>
+</div>
+</body>
+</html>"
+        };
+
+                message.To.Add(to);
+                smtp.Send(message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[EMAIL ERROR] {ex.Message}");
+            }
+        }
+    }
+
+    // =========================
+    // DTOs
+    // =========================
+    public class GradeSeedDto
+    {
+        public string GradeName { get; set; }
+        public decimal Term1Fee { get; set; }
+        public decimal Term2Fee { get; set; }
+        public decimal Term3Fee { get; set; }
+        public List<string> Streams { get; set; } = new List<string>();
+    }
+
+    public class SubscriptionRequest
+    {
+        public string SchoolName { get; set; }
+        public string AdminEmail { get; set; }
+        public string Password { get; set; }
+        public string SchoolGender { get; set; }
+        public decimal PlanAmount { get; set; }
+        public List<GradeSeedDto> Grades { get; set; } = new List<GradeSeedDto>();
+    }
+}
