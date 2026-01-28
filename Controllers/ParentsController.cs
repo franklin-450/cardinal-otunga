@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using EduTrackTrial.Services;
 using EduTrackTrial.DTOs;
+using EduTrackTrial.Hubs;
 
 namespace EduTrackTrial.Controllers
 {
@@ -17,24 +18,30 @@ namespace EduTrackTrial.Controllers
     {
         private readonly string _conn;
         private readonly ILogger<ParentsController> _logger;
-        private readonly IHubContext<EduTrackTrial.Hubs.NotificationHub> _hub;
+        private readonly IHubContext<NotificationHub> _hub;
         private readonly IMpesaDarajaService _mpesa;
-        
+
+        // Locked to Cardinal Otunga (production choice)
         private const string SCHOOL_SCHEMA = "cardinal_otunga";
         private const string SCHOOL_NAME = "Cardinal Otunga High School Mosocho";
 
         public ParentsController(
             IConfiguration config,
             ILogger<ParentsController> logger,
-            IHubContext<EduTrackTrial.Hubs.NotificationHub> hub,
+            IHubContext<NotificationHub> hub,
             IMpesaDarajaService mpesa)
         {
-            _conn = config.GetConnectionString("DefaultConnection") ?? throw new ArgumentException("DefaultConnection is not configured");
+            _conn = config.GetConnectionString("DefaultConnection")
+                ?? throw new ArgumentException("DefaultConnection is not configured");
+
             _logger = logger;
             _hub = hub;
             _mpesa = mpesa;
         }
 
+        // =========================
+        // VIEW
+        // =========================
         [HttpGet("")]
         [HttpGet("index")]
         public IActionResult Index()
@@ -44,7 +51,7 @@ namespace EduTrackTrial.Controllers
         }
 
         // =========================
-        // STUDENT LOGIN API
+        // STUDENT LOGIN
         // =========================
         [HttpPost("api/student-login")]
         public async Task<IActionResult> StudentLogin([FromBody] StudentLoginRequest request)
@@ -60,142 +67,97 @@ namespace EduTrackTrial.Controllers
                 await using var conn = new NpgsqlConnection(_conn);
                 await conn.OpenAsync();
 
-                var student = await GetStudentAsync(conn, SCHOOL_SCHEMA, request);
-
+                var student = await GetStudentAsync(conn, request);
                 if (student == null)
                     return Json(new { success = false, message = "Invalid account number or name" });
 
-                student.Fees = await GetStudentFeeInfoAsync(student.Id, SCHOOL_SCHEMA, conn);
+                student.Fees = await GetStudentFeeInfoAsync(student.Id, conn);
+
+                // Store logged-in student in session (security)
+                HttpContext.Session.SetInt32("StudentId", student.Id);
 
                 return Json(new { success = true, student });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Student login error");
-                return Json(new { success = false, message = "Login error" });
+                _logger.LogError(ex, "Student login failed");
+                return Json(new { success = false, message = "Unable to login at this time" });
             }
         }
 
-        private async Task<DTOs.StudentDto?> GetStudentAsync(NpgsqlConnection conn, string schema, DTOs.StudentLoginRequest request)
-        {
-            var sql = $"SELECT id, account_no, full_name, date_of_birth, gender, grade, stream, admission_date, previous_school, photo_path, medical_info, status FROM \"{schema}\".\"Students\" WHERE account_no = @account AND LOWER(full_name) = LOWER(@name) LIMIT 1;";
-            
-            await using var cmd = new NpgsqlCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@account", request.AccountNo ?? (object)DBNull.Value);
-            cmd.Parameters.AddWithValue("@name", request.StudentName ?? (object)DBNull.Value);
-
-            await using var r = await cmd.ExecuteReaderAsync();
-            if (!await r.ReadAsync()) return null;
-
-            return new DTOs.StudentDto
-            {
-                Id = r.GetInt32(0),
-                AccountNo = r.GetString(1),
-                FullName = r.GetString(2),
-                DateOfBirth = r.GetDateTime(3),
-                Gender = r.GetString(4),
-                Grade = r.GetString(5),
-                Stream = r.IsDBNull(6) ? null : r.GetString(6),
-                AdmissionDate = r.GetDateTime(7),
-                PreviousSchool = r.IsDBNull(8) ? null : r.GetString(8),
-                PhotoPath = r.IsDBNull(9) ? null : r.GetString(9),
-                MedicalInfo = r.IsDBNull(10) ? null : r.GetString(10),
-                Status = r.IsDBNull(11) ? null : r.GetString(11)
-            };
-        }
-
         // =========================
-        // FEES CALCULATION
-        // =========================
-        private async Task<FeeInfoDto> GetStudentFeeInfoAsync(
-            int studentId, string schema, NpgsqlConnection conn)
-        {
-            int t1 = 0, t2 = 0, t3 = 0;
-
-            await using (var cmd = new NpgsqlCommand($@"
-                SELECT g.term1_fee, g.term2_fee, g.term3_fee
-                FROM ""{schema}"".""Students"" s
-                JOIN ""{schema}"".""Grades"" g ON s.grade = g.grade_name
-                WHERE s.id=@id;", conn))
-            {
-                cmd.Parameters.AddWithValue("@id", studentId);
-                await using var r = await cmd.ExecuteReaderAsync();
-                if (await r.ReadAsync())
-                {
-                    t1 = r.GetInt32(0);
-                    t2 = r.GetInt32(1);
-                    t3 = r.GetInt32(2);
-                }
-            }
-
-            int paid;
-            await using (var cmd = new NpgsqlCommand($@"
-                SELECT COALESCE(SUM(amount),0)
-                FROM ""{schema}"".""Payments""
-                WHERE student_id=@id AND status='Completed';", conn))
-            {
-                cmd.Parameters.AddWithValue("@id", studentId);
-                paid = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-            }
-
-            return new FeeInfoDto
-            {
-                Term1 = t1,
-                Term2 = t2,
-                Term3 = t3,
-                TotalDue = t1 + t2 + t3,
-                AmountPaid = paid,
-                Balance = Math.Max(0, (t1 + t2 + t3) - paid)
-            };
-        }
-
-        // =========================
-        // INITIATE PAYMENT
+        // PAYMENTS
         // =========================
         [HttpPost("api/initiate-payment")]
         public async Task<IActionResult> InitiatePayment([FromBody] PaymentInitiateRequest request)
         {
+            int? sessionStudentId = HttpContext.Session.GetInt32("StudentId");
+            if (sessionStudentId == null || sessionStudentId != request.StudentId)
+                return Unauthorized(new { success = false, message = "Unauthorized" });
+
             if (request.Amount <= 0 || string.IsNullOrWhiteSpace(request.Phone))
-                return Json(new { success = false, message = "Invalid request" });
+                return Json(new { success = false, message = "Invalid payment request" });
 
             await using var conn = new NpgsqlConnection(_conn);
             await conn.OpenAsync();
+            await using var tx = await conn.BeginTransactionAsync();
 
-            string txId = Guid.NewGuid().ToString("N")[..12].ToUpper();
-            string reference = $"COHS{request.StudentId}{DateTime.UtcNow:yyyyMMddHHmmss}";
-
-            await using (var cmd = new NpgsqlCommand($@"
-                INSERT INTO ""{SCHOOL_SCHEMA}"".""Payments""
-                (student_id, amount, phone, payment_method, status, transaction_id, reference, created_at)
-                VALUES (@sid,@amt,@phone,'MPesa','Pending',@tx,@ref,NOW());", conn))
+            try
             {
-                cmd.Parameters.AddWithValue("@sid", request.StudentId);
-                cmd.Parameters.AddWithValue("@amt", request.Amount);
-                cmd.Parameters.AddWithValue("@phone", request.Phone);
-                cmd.Parameters.AddWithValue("@tx", txId);
-                cmd.Parameters.AddWithValue("@ref", reference);
-                await cmd.ExecuteNonQueryAsync();
+                string txId = Guid.NewGuid().ToString("N")[..12].ToUpper();
+                string reference = $"COHS{request.StudentId}{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+                await using (var cmd = new NpgsqlCommand($@"
+                    INSERT INTO ""{SCHOOL_SCHEMA}"".""Payments""
+                    (student_id, amount, phone, payment_method, status, transaction_id, reference, created_at)
+                    VALUES (@sid,@amt,@phone,'MPesa','Pending',@tx,@ref,NOW());", conn))
+                {
+                    cmd.Parameters.AddWithValue("@sid", request.StudentId);
+                    cmd.Parameters.AddWithValue("@amt", request.Amount);
+                    cmd.Parameters.AddWithValue("@phone", request.Phone);
+                    cmd.Parameters.AddWithValue("@tx", txId);
+                    cmd.Parameters.AddWithValue("@ref", reference);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                var result = await _mpesa.SendStkPushAsync(
+                    request.Phone, request.Amount, reference);
+
+                if (!result.Success)
+                {
+                    await tx.RollbackAsync();
+                    return Json(new { success = false, message = result.Message });
+                }
+
+                await UpdatePaymentStatus(conn, txId, "Completed");
+
+                await CreateNotification(
+                    conn,
+                    request.StudentId,
+                    "Payment Received",
+                    $"Payment of KES {request.Amount:N0} has been received. Thank you!");
+
+                await tx.CommitAsync();
+
+                // Optional real-time push
+                await _hub.Clients.All.SendAsync(
+                    "paymentUpdate",
+                    request.StudentId,
+                    request.Amount);
+
+                return Json(new
+                {
+                    success = true,
+                    transactionId = txId,
+                    reference
+                });
             }
-
-            var result = await _mpesa.SendStkPushAsync(
-                request.Phone, request.Amount, reference);
-
-            if (!result.Success)
-                return Json(new { success = false, message = result.Message });
-
-            await UpdatePaymentStatus(SCHOOL_SCHEMA, conn, txId, "Completed");
-
-            // Send notification to parent
-            await CreateNotification(conn, SCHOOL_SCHEMA, request.StudentId, 
-                "Payment Received", 
-                $"Payment of KES {request.Amount:N0} has been received. Thank you!");
-
-            return Json(new
+            catch (Exception ex)
             {
-                success = true,
-                transactionId = txId,
-                reference
-            });
+                await tx.RollbackAsync();
+                _logger.LogError(ex, "Payment processing failed");
+                return Json(new { success = false, message = "Payment failed" });
+            }
         }
 
         // =========================
@@ -204,6 +166,10 @@ namespace EduTrackTrial.Controllers
         [HttpGet("api/notifications")]
         public async Task<IActionResult> GetNotifications(int studentId)
         {
+            int? sessionStudentId = HttpContext.Session.GetInt32("StudentId");
+            if (sessionStudentId == null || sessionStudentId != studentId)
+                return Unauthorized();
+
             try
             {
                 await using var conn = new NpgsqlConnection(_conn);
@@ -238,94 +204,164 @@ namespace EduTrackTrial.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching notifications for student {StudentId}", studentId);
-                return Json(new { success = false, message = "Error loading notifications" });
+                _logger.LogError(ex, "Notification fetch failed");
+                return Json(new { success = false, message = "Unable to load notifications" });
             }
         }
 
         [HttpPost("api/notifications/mark-read")]
         public async Task<IActionResult> MarkNotificationsRead([FromBody] MarkNotificationsRequest request)
         {
-            try
-            {
-                await using var conn = new NpgsqlConnection(_conn);
-                await conn.OpenAsync();
+            int? sessionStudentId = HttpContext.Session.GetInt32("StudentId");
+            if (sessionStudentId == null || sessionStudentId != request.StudentId)
+                return Unauthorized();
 
-                if (request.NotificationIds != null && request.NotificationIds.Count > 0)
-                {
-                    var ids = string.Join(",", request.NotificationIds);
-                    await using var cmd = new NpgsqlCommand($@"
-                        UPDATE ""{SCHOOL_SCHEMA}"".""Notifications""
-                        SET is_read = TRUE
-                        WHERE id IN ({ids}) AND student_id = @sid;", conn);
+            await using var conn = new NpgsqlConnection(_conn);
+            await conn.OpenAsync();
 
-                    cmd.Parameters.AddWithValue("@sid", request.StudentId);
-                    await cmd.ExecuteNonQueryAsync();
-                }
-                else
-                {
-                    // Mark all as read for this student
-                    await using var cmd = new NpgsqlCommand($@"
-                        UPDATE ""{SCHOOL_SCHEMA}"".""Notifications""
-                        SET is_read = TRUE
-                        WHERE student_id = @sid;", conn);
-
-                    cmd.Parameters.AddWithValue("@sid", request.StudentId);
-                    await cmd.ExecuteNonQueryAsync();
-                }
-
-                return Json(new { success = true });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error marking notifications as read");
-                return Json(new { success = false, message = "Error updating notifications" });
-            }
-        }
-
-        // =========================
-        // HELPER METHODS
-        // =========================
-        private async Task CreateNotification(NpgsqlConnection conn, string schema, int studentId, string title, string message, string type = "info")
-        {
-            try
+            if (request.NotificationIds != null && request.NotificationIds.Count > 0)
             {
                 await using var cmd = new NpgsqlCommand($@"
-                    INSERT INTO ""{schema}"".""Notifications""
-                    (student_id, title, message, type, is_read, created_at)
-                    VALUES (@sid, @title, @msg, @type, FALSE, NOW());", conn);
+                    UPDATE ""{SCHOOL_SCHEMA}"".""Notifications""
+                    SET is_read = TRUE
+                    WHERE student_id=@sid AND id = ANY(@ids);", conn);
 
-                cmd.Parameters.AddWithValue("@sid", studentId);
-                cmd.Parameters.AddWithValue("@title", title);
-                cmd.Parameters.AddWithValue("@msg", message);
-                cmd.Parameters.AddWithValue("@type", type);
-
+                cmd.Parameters.AddWithValue("@sid", request.StudentId);
+                cmd.Parameters.AddWithValue("@ids", request.NotificationIds);
                 await cmd.ExecuteNonQueryAsync();
-
-                _logger.LogInformation("Notification created for student {StudentId}: {Title}", studentId, title);
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Error creating notification for student {StudentId}", studentId);
+                await using var cmd = new NpgsqlCommand($@"
+                    UPDATE ""{SCHOOL_SCHEMA}"".""Notifications""
+                    SET is_read = TRUE
+                    WHERE student_id=@sid;", conn);
+
+                cmd.Parameters.AddWithValue("@sid", request.StudentId);
+                await cmd.ExecuteNonQueryAsync();
             }
+
+            return Json(new { success = true });
         }
 
-        private async Task UpdatePaymentStatus(string schema, NpgsqlConnection conn, string tx, string status)
+        // =========================
+        // HELPERS
+        // =========================
+        private async Task<StudentDto?> GetStudentAsync(
+            NpgsqlConnection conn,
+            StudentLoginRequest request)
+        {
+            var sql = $@"
+                SELECT id, account_no, full_name, date_of_birth, gender, grade,
+                       stream, admission_date, previous_school, photo_path,
+                       medical_info, status
+                FROM ""{SCHOOL_SCHEMA}"".""Students""
+                WHERE account_no=@account AND LOWER(full_name)=LOWER(@name)
+                LIMIT 1;";
+
+            await using var cmd = new NpgsqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@account", request.AccountNo);
+            cmd.Parameters.AddWithValue("@name", request.StudentName);
+
+            await using var r = await cmd.ExecuteReaderAsync();
+            if (!await r.ReadAsync()) return null;
+
+            return new StudentDto
+            {
+                Id = r.GetInt32(0),
+                AccountNo = r.GetString(1),
+                FullName = r.GetString(2),
+                DateOfBirth = r.GetDateTime(3),
+                Gender = r.GetString(4),
+                Grade = r.GetString(5),
+                Stream = r.IsDBNull(6) ? null : r.GetString(6),
+                AdmissionDate = r.GetDateTime(7),
+                PreviousSchool = r.IsDBNull(8) ? null : r.GetString(8),
+                PhotoPath = r.IsDBNull(9) ? null : r.GetString(9),
+                MedicalInfo = r.IsDBNull(10) ? null : r.GetString(10),
+                Status = r.IsDBNull(11) ? null : r.GetString(11)
+            };
+        }
+
+        private async Task<FeeInfoDto> GetStudentFeeInfoAsync(
+            int studentId,
+            NpgsqlConnection conn)
+        {
+            int t1 = 0, t2 = 0, t3 = 0;
+
+            await using (var cmd = new NpgsqlCommand($@"
+                SELECT g.term1_fee, g.term2_fee, g.term3_fee
+                FROM ""{SCHOOL_SCHEMA}"".""Students"" s
+                JOIN ""{SCHOOL_SCHEMA}"".""Grades"" g ON s.grade=g.grade_name
+                WHERE s.id=@id;", conn))
+            {
+                cmd.Parameters.AddWithValue("@id", studentId);
+                await using var r = await cmd.ExecuteReaderAsync();
+                if (await r.ReadAsync())
+                {
+                    t1 = r.GetInt32(0);
+                    t2 = r.GetInt32(1);
+                    t3 = r.GetInt32(2);
+                }
+            }
+
+            int paid;
+            await using (var cmd = new NpgsqlCommand($@"
+                SELECT COALESCE(SUM(amount),0)
+                FROM ""{SCHOOL_SCHEMA}"".""Payments""
+                WHERE student_id=@id AND status='Completed';", conn))
+            {
+                cmd.Parameters.AddWithValue("@id", studentId);
+                paid = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+            }
+
+            return new FeeInfoDto
+            {
+                Term1 = t1,
+                Term2 = t2,
+                Term3 = t3,
+                TotalDue = t1 + t2 + t3,
+                AmountPaid = paid,
+                Balance = Math.Max(0, (t1 + t2 + t3) - paid)
+            };
+        }
+
+        private async Task CreateNotification(
+            NpgsqlConnection conn,
+            int studentId,
+            string title,
+            string message,
+            string type = "info")
         {
             await using var cmd = new NpgsqlCommand($@"
-                UPDATE ""{schema}"".""Payments""
+                INSERT INTO ""{SCHOOL_SCHEMA}"".""Notifications""
+                (student_id,title,message,type,is_read,created_at)
+                VALUES (@sid,@title,@msg,@type,FALSE,NOW());", conn);
+
+            cmd.Parameters.AddWithValue("@sid", studentId);
+            cmd.Parameters.AddWithValue("@title", title);
+            cmd.Parameters.AddWithValue("@msg", message);
+            cmd.Parameters.AddWithValue("@type", type);
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        private async Task UpdatePaymentStatus(
+            NpgsqlConnection conn,
+            string txId,
+            string status)
+        {
+            await using var cmd = new NpgsqlCommand($@"
+                UPDATE ""{SCHOOL_SCHEMA}"".""Payments""
                 SET status=@s, completed_at=NOW()
                 WHERE transaction_id=@t;", conn);
 
             cmd.Parameters.AddWithValue("@s", status);
-            cmd.Parameters.AddWithValue("@t", tx);
+            cmd.Parameters.AddWithValue("@t", txId);
             await cmd.ExecuteNonQueryAsync();
         }
     }
 
-    // =========================
-    // DTOs
-    // =========================
     public class MarkNotificationsRequest
     {
         public int StudentId { get; set; }
